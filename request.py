@@ -5,84 +5,8 @@ from pandas.io.json import json_normalize
 import sys
 
 
-def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
-
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-
-    The "answer" return value is True for "yes" or False for "no".
-    """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
-    if default is None:
-        prompt = " [y/n] "
-    elif default == "yes":
-        prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        sys.stdout.write(question + prompt)
-        choice = input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
-
-
 class ConnectMikeCloud:
     metadata_service_url = "https://core-metadata-prod.azurewebsites.net/"
-
-    # need to add information on what the parameters are
-    def set_temp_info(self, start_time, end_time, interval="string", resolution="string"):
-        """
-        function to create a dictionary with typicial values of temporal information for the dataset
-        :param start_time:
-        :param end_time:
-        :param interval:
-        :param resolution:
-        :return: dictionary with temporal information
-        :rtype: dict
-        """
-        # ISO timeformat: "2020-05-27T11:12:57.126Z"
-        temp_info = {
-            "startTime": start_time,
-            "endTime": end_time,
-            "interval": interval,
-            "resolution": resolution
-        }
-        return temp_info
-
-    # need to add information on what the parameters are
-    def set_spat_info(self, location=None, primary_spatial_reference="string", resolution="string", srid=0):
-        """
-        function to create a dictionary with typicial values of spatial information for the dataset
-        :param location:
-        :param primary_spatial_reference:
-        :param resolution:
-        :param srid:
-        :return: returns dictionary of spatial information
-        :rtype: dict
-        :
-        """
-        if location is None:
-            location = {}
-
-        spat_info = {
-            "location": location,
-            "primarySpatialReference": primary_spatial_reference,
-            "resolution": resolution,
-            "srid": srid
-        }
-        return spat_info
 
     def __init__(self, api_key, id_proj="", proj=None, ds_object=None):
         """
@@ -582,3 +506,36 @@ class Timeseries:
 
     def del_data(self, time_from, time_to):
         pass
+
+
+def query_yes_no(question, default="yes"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
