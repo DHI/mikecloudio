@@ -1,7 +1,6 @@
 import requests
 import json
 import pandas as pd
-from pandas.io.json import json_normalize
 import sys
 
 
@@ -165,7 +164,7 @@ class ConnectMikeCloud:
         ds = Dataset(connection=self, dataset_id=json_["id"])
         return ds
 
-    def get_ds(self, id_dataset="", name_ds=""):
+    def get_ds(self, name_ds="", id_dataset=""):
         """
         function to create a Dataset object according the project id / or project name
         :param id_dataset:
@@ -175,7 +174,10 @@ class ConnectMikeCloud:
         """
         if name_ds != "" and id_dataset == "":
             id_dataset = self.query_ds_id(name_ds)
-
+            if id_dataset == "":
+                raise ValueError("dataset of name {0} does not exist".format(name_ds))
+        if id_dataset == "":
+            raise ValueError("id of dataset was not defined or does not exist")
         self.ds = Dataset(connection=self, dataset_id=id_dataset)
         return self.ds
 
@@ -361,7 +363,10 @@ class Dataset:
         """
         if ts_name != "" and ts_id == "":
             ts_id = self.query_ts_id(ts_name)
-
+            if ts_id == "":
+                raise ValueError("timeseries of name {0} does not exist".format(ts_name))
+        if ts_id == "":
+            raise ValueError("id of timeseries was not defined or does not exist")
         self.ts = Timeseries(dataset=self, timeseries_id=ts_id)
         return self.ts
 
@@ -369,23 +374,22 @@ class Dataset:
     def create_ts(self, name, unit="eumUmeter", item="eumIWaterLevel", data_type="Single", data_fields=None,
                   properties=None):
         """
-        Beschreibung
-        :param name:
+        function to create a timeseries
+        :param name: desired name of timeseries
         :type name: str
-        :param unit:
-        :param item:
-        :param data_type:
-        :param data_fields:
-        :param properties:
-        :return:
-        :rtype: tuple
+        :param unit: default "eumUmeter"
+        :param item: default "eumIWaterLevel"
+        :param data_type: default "Single"
+        :param data_fields: additional values can be assigned of type single, text or flag
+        :param properties: assign additional properties
+        :return: returns an instance of Timeseries corresponding to the created one
+        :rtype: object
         """
         if data_fields is None:
             data_fields = []
         if properties is None:
             properties = {}
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id)
-        print(url)
 
         def conv_json(na, un, it, typ, fields):
             dict_ = {
@@ -402,14 +406,12 @@ class Dataset:
         conv = conv_json(name, unit, item, data_type, data_fields)
         body = json.dumps(conv)
 
-        print(body)
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
+        dict_resp = response.json()
 
-        json_ = response.json()
-        df = json_normalize(json_)
-
-        return df, json_
+        ts = Timeseries(dataset=self, timeseries_id=dict_resp["id"])
+        return ts
 
     def del_ds(self):
         url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
