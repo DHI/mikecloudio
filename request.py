@@ -180,7 +180,7 @@ class ConnectMikeCloud:
         return self.ds
 
     # updates a Dataset: not tested yet
-    def update_ds(self, dataset_id, ds_name, upd_descr, ds_type="file", temp_info=None,
+    def update_ds(self, dataset_id, upd_name, upd_descr, ds_type="file", temp_info=None,
                   spat_info=None, add_prop=None, metadata=None):
 
         if self._id_proj == "":
@@ -215,7 +215,7 @@ class ConnectMikeCloud:
             }
             return dict_
 
-        conv = conv_json(dataset_id, ds_name, upd_descr, ds_type, temp_info, spat_info,
+        conv = conv_json(dataset_id, upd_name, upd_descr, ds_type, temp_info, spat_info,
                          add_prop, metadata)
         body = json.dumps(conv)
 
@@ -275,11 +275,7 @@ class ConnectMikeCloud:
 class Project:
 
     def __init__(self, project_id):
-
-        self.project_id = project_id
-
-    def __repr__(self):
-        return str(self)
+        self._id = project_id
 
 
 class Dataset:
@@ -287,12 +283,12 @@ class Dataset:
     def __init__(self, connection, dataset_id=""):
         self.con = connection
         self._id_proj = connection.get_id()
-        self._id_ds = dataset_id
+        self._id = dataset_id
         self.ts = None
         self._header = {'dhi-open-api-key': '{0}'.format(connection.get_api_key()),
                         'Content-Type': 'application/json',
                         'dhi-project-id': '{0}'.format(self._id_proj),
-                        'dhi-dataset-id': '{0}'.format(self._id_ds),
+                        'dhi-dataset-id': '{0}'.format(self._id),
                         'dhi-service-id': 'timeseries',
                         }
 
@@ -300,7 +296,7 @@ class Dataset:
         pass
 
     def get_id(self):
-        return self._id_ds
+        return self._id
 
     def get_ds_info(self):
         """
@@ -308,22 +304,22 @@ class Dataset:
         :return: json with details
         """
 
-        if self._id_ds == "":
+        if self._id == "":
             raise ValueError("dataset id not set")
 
-        url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id_ds)
+        url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
         json_ = response.json()
         return json_
 
-    def set_ds_id(self, ds_id):
+    def set_ds_id(self, dataset_id):
         """
         function to set dataset id if not defined in constructor
-        :param ds_id: id of dataset
-        :type ds_id: str
+        :param dataset_id: id of dataset
+        :type dataset_id: str
         """
-        self._id_ds = ds_id
+        self._id = dataset_id
 
     def get_all_ts(self):
         """
@@ -331,7 +327,7 @@ class Dataset:
         :return: dataframe with response
         :rtype: pd.DataFrame
         """
-        url = self.con.metadata_service_url + "api/ts/{0}/timeseries/list".format(self._id_ds)
+        url = self.con.metadata_service_url + "api/ts/{0}/timeseries/list".format(self._id)
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
         resp_dict = response.json()["data"]
@@ -366,7 +362,7 @@ class Dataset:
         if ts_name != "" and ts_id == "":
             ts_id = self.query_ts_id(ts_name)
 
-        self.ts = Timeseries(dataset=self, id_ts=ts_id)
+        self.ts = Timeseries(dataset=self, timeseries_id=ts_id)
         return self.ts
 
     # muss noch auf properties angepasst werden
@@ -388,7 +384,7 @@ class Dataset:
             data_fields = []
         if properties is None:
             properties = {}
-        url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id_ds)
+        url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id)
         print(url)
 
         def conv_json(na, un, it, typ, fields):
@@ -416,16 +412,16 @@ class Dataset:
         return df, json_
 
     def del_ds(self):
-        url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id_ds)
+        url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         confirm = query_yes_no("Are you sure you want to delete " + self._id_proj + " ?")
         if confirm is True:
             response = requests.delete(url, headers=self.con.get_header())
             print("Status: ", response.status_code)
 
-    def del_ts(self, ts_id):
-        url = self.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, ts_id)
+    def del_ts(self, timeseries_id):
+        url = self.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id, timeseries_id)
         print(url)
-        confirm = query_yes_no("Are you sure you want to delete " + ts_id + " ?")
+        confirm = query_yes_no("Are you sure you want to delete " + timeseries_id + " ?")
         if confirm is True:
             response = requests.delete(url, headers=self._header)
             print("Status: ", response.status_code)
@@ -433,9 +429,9 @@ class Dataset:
 
 class Timeseries:
 
-    def __init__(self, dataset, id_ts):
+    def __init__(self, dataset, timeseries_id):
         self.ds = dataset
-        self._id_ts = id_ts
+        self._id = timeseries_id
         self._id_proj = self.ds.con.get_id()
         self._id_ds = self.ds.get_id()
         self._header = {'dhi-open-api-key': '{0}'.format(self.ds.con.get_api_key()),
@@ -446,7 +442,7 @@ class Timeseries:
                         }
 
     def get_data(self, time_from=None, time_to=None):
-        url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values".format(self._id_ds, self._id_ts)
+        url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values".format(self._id_ds, self._id)
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
         json_ = response.json()
@@ -455,13 +451,13 @@ class Timeseries:
         return df
 
     # additional parameters not working yet
-    def add_data(self, df, prop=None):
+    def add_data(self, dataframe, prop=None):
 
         if prop is None:
             prop = []
 
         url = self.ds.con.metadata_service_url + "api/upload/{0}/timeseries/{1}/json".format(self._id_ds,
-                                                                                             self._id_ts)
+                                                                                             self._id)
 
         def conv_json(list_):
             dict_ = {"data": list_
@@ -471,12 +467,12 @@ class Timeseries:
         list_values = []
 
         if not prop:
-            for i in range(len(df)):
-                list_values.append(["{0}".format(df.timestamp.iloc[i]), df.value.iloc[i]])
+            for i in range(len(dataframe)):
+                list_values.append(["{0}".format(dataframe.timestamp.iloc[i]), dataframe.value.iloc[i]])
 
         else:
-            prop_list = ["".format(df.timestamp), df.value]
-            for i in range(len(df)):
+            prop_list = ["".format(dataframe.timestamp), dataframe.value]
+            for i in range(len(dataframe)):
                 for k in range(len(prop)):
                     prop_list.append(prop[k])
                 list_values.append(prop_list)
@@ -485,7 +481,7 @@ class Timeseries:
 
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
-        print("added {0} values to {1}".format(len(list_values), self._id_ts))
+        print("added {0} values to {1}".format(len(list_values), self._id))
 
     def del_ts(self):
         pass
