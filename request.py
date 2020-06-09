@@ -44,7 +44,7 @@ class ConnectMikeCloud:
     def get_header(self):
         return self._header
 
-    def get_all_projects(self):
+    def list_projects(self):
         """
         function to request all available projects with given api key
         :return: DataFrame
@@ -73,7 +73,7 @@ class ConnectMikeCloud:
         function to set project ID if not done in the constructor already. User can use id or the project name
         :param id_proj: project ID
         :type id_proj: str
-        :param proj_name: project name according to get_all_project() request
+        :param proj_name: project name according to list_project() request
         :type proj_name: str
         :return: Project object
         :rtype: object
@@ -240,12 +240,12 @@ class ConnectMikeCloud:
 
     def query_proj_id(self, proj_name):
         """
-        function to query the project id with the help of function get_all_projects()
+        function to query the project id with the help of function list_projects()
         :param proj_name:
         :return: id of the project
         :rtype: str
         """
-        df = self.get_all_projects()
+        df = self.list_projects()
         _id = ""
         if df.empty:
             raise ValueError("no projects found for this api token")
@@ -323,7 +323,7 @@ class Dataset:
         """
         self._id = dataset_id
 
-    def get_all_ts(self):
+    def list_ts(self):
         """
         request all timeseries related to dataset it
         :return: dataframe with response
@@ -343,7 +343,7 @@ class Dataset:
         :return: timeseries id
         :rtype: str
         """
-        df = self.get_all_ts()
+        df = self.list_ts()
         _id = ""
         if df.empty:
             raise ValueError("no timeseries found for this dataset")
