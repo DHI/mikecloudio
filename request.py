@@ -226,13 +226,21 @@ class ConnectMikeCloud:
         json_ = response.json()
         return json_
 
-    def del_ds(self, id_ds):
+    def del_ds(self, id_ds="", name_ds=""):
         """
         function to request deletion of a dataset
-        :param id_ds: 
+        :param id_ds: id of dataset
         :type id_ds: str
+        :param name_ds: name of dataset
+        :type name_ds: str
         """
-        confirm = query_yes_no("Are you sure you want to delete " + self._id_proj + " ?")
+
+        if name_ds != "" and id_ds == "":
+            id_ds = self.query_ds_id(name_ds)
+            if id_ds == "":
+                raise ValueError("timeseries of name {0} does not exist".format(name_ds))
+
+        confirm = query_yes_no("Are you sure you want to delete " + name_ds + " " + id_ds + " ?")
         if confirm is True:
             url = self.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, id_ds)
             response = requests.delete(url, headers=self._header)
@@ -294,8 +302,28 @@ class Dataset:
                         'dhi-service-id': 'timeseries',
                         }
 
-    def add_properties(self):
-        pass
+    # does not work yet
+    def update_properties(self, properties, ts_name="", ts_id=""):
+        if ts_name != "" and ts_id == "":
+            ts_id = self.query_ts_id(ts_name)
+            if ts_id == "":
+                raise ValueError("timeseries of name {0} does not exist".format(ts_name))
+
+        url = self.con.metadata_service_url + "api/ts/{0}/{1}".format(self._id, ts_id)
+
+        def conv_json(prop):
+            dict_ = {
+                  "properties": prop
+            }
+            return dict_
+
+        conv = conv_json(properties)
+        body = json.dumps(conv)
+        print(body)
+        response = requests.put(url, headers=self._header, data=body)
+        print("Status: ", response.status_code)
+        json_ = response.json()
+        return json_
 
     def get_id(self):
         return self._id
@@ -387,25 +415,31 @@ class Dataset:
         """
         if data_fields is None:
             data_fields = []
+        if type(data_fields) != "list":
+            raise ValueError('data fields must be of type list containing dictionaries, e.g. '
+                             '[{"name": "example"},{"name": "example2"}]')
         if properties is None:
             properties = {}
+        elif type(properties) != "dict":
+            raise ValueError("properties must be of type dictionary")
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id)
 
-        def conv_json(na, un, it, typ, fields):
+        def conv_json(na, un, it, typ, fields, prop):
             dict_ = {
                 "item": {
                     "name": na,
                     "unit": un,
                     "item": it,
                     "dataType": typ
-                 },
+                },
+                "properties": prop,
                 "dataFields": fields
-                }
+
+            }
             return dict_
 
-        conv = conv_json(name, unit, item, data_type, data_fields)
+        conv = conv_json(name, unit, item, data_type, data_fields, properties)
         body = json.dumps(conv)
-
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
         dict_resp = response.json()
@@ -420,10 +454,15 @@ class Dataset:
             response = requests.delete(url, headers=self.con.get_header())
             print("Status: ", response.status_code)
 
-    def del_ts(self, timeseries_id):
+    def del_ts(self, timeseries_id="", timeseries_name=""):
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id, timeseries_id)
-        print(url)
-        confirm = query_yes_no("Are you sure you want to delete " + timeseries_id + " ?")
+
+        if timeseries_name != "" and timeseries_id == "":
+            timeseries_id = self.query_ts_id(timeseries_name)
+            if timeseries_id == "":
+                raise ValueError("timeseries of name {0} does not exist".format(timeseries_name))
+
+        confirm = query_yes_no("Are you sure you want to delete " + timeseries_name + " " + timeseries_id + " ?")
         if confirm is True:
             response = requests.delete(url, headers=self._header)
             print("Status: ", response.status_code)
@@ -444,9 +483,23 @@ class Timeseries:
                         }
 
     def get_data(self, time_from=None, time_to=None):
-        url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values".format(self._id_ds, self._id)
+        if time_from is None and time_to is None:
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values"\
+                .format(self._id_ds, self._id)
+        elif time_from is None and time_to is not None:
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?to={2}"\
+                .format(self._id_ds, self._id, time_to)
+        elif time_from is not None and time_to is None:
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}"\
+                .format(self._id_ds, self._id, time_from)
+        elif time_from is not None and time_to is not None:
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}&to={3}"\
+                .format(self._id_ds, self._id, time_from, time_to)
+
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
+        if response.status_code > 300:
+            raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
         json_ = response.json()
         df = pd.DataFrame(json_)
 
@@ -483,7 +536,15 @@ class Timeseries:
 
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
-        print("added {0} values to {1}".format(len(list_values), self._id))
+        if response.status_code < 300:
+            print("added {0} values to {1}".format(len(list_values), self._id))
+
+    def get_details(self):
+        url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
+        response = requests.get(url, headers=self._header)
+        print("Status: ", response.status_code)
+        resp_json = response.json()
+        return resp_json
 
     def del_ts(self):
         pass
@@ -491,11 +552,7 @@ class Timeseries:
     def edit_prop(self):
         pass
 
-    def get_details(self):
-        pass
-
     def add_json(self):
-
         pass
 
     def add_csv(self):
