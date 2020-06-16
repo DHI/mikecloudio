@@ -498,10 +498,11 @@ class Timeseries:
 
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
-        if response.status_code > 300:
+        if response.status_code > 300 and time_from is not None and time_to is not None:
             raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
         json_ = response.json()
-        df = pd.DataFrame(json_)
+        df = pd.DataFrame(json_["data"])
+        df.rename(columns={0: 'timestamp', 1: 'value'}, inplace=True)
 
         return df
 
