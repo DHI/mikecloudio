@@ -540,7 +540,7 @@ class Timeseries:
         if response.status_code < 300:
             print("added {0} values to {1}".format(len(list_values), self._id))
 
-    def get_details(self):
+    def get_info(self):
         url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
