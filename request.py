@@ -415,12 +415,12 @@ class Dataset:
         """
         if data_fields is None:
             data_fields = []
-        if type(data_fields) != "list":
+        if not isinstance(data_fields, list):
             raise ValueError('data fields must be of type list containing dictionaries, e.g. '
                              '[{"name": "example"},{"name": "example2"}]')
         if properties is None:
             properties = {}
-        elif type(properties) != "dict":
+        if not isinstance(properties, dict):
             raise ValueError("properties must be of type dictionary")
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id)
 
@@ -443,6 +443,8 @@ class Dataset:
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
         dict_resp = response.json()
+        if response.status_code <= 400:
+            raise ValueError("request failed")
 
         ts = Timeseries(dataset=self, timeseries_id=dict_resp["id"])
         return ts
@@ -455,7 +457,6 @@ class Dataset:
             print("Status: ", response.status_code)
 
     def del_ts(self, timeseries_id="", timeseries_name=""):
-        url = self.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id, timeseries_id)
 
         if timeseries_name != "" and timeseries_id == "":
             timeseries_id = self.query_ts_id(timeseries_name)
@@ -464,6 +465,7 @@ class Dataset:
 
         confirm = query_yes_no("Are you sure you want to delete " + timeseries_name + " " + timeseries_id + " ?")
         if confirm is True:
+            url = self.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id, timeseries_id)
             response = requests.delete(url, headers=self._header)
             print("Status: ", response.status_code)
 
