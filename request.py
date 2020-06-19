@@ -98,7 +98,6 @@ class ConnectMikeCloud:
         url = self.metadata_service_url + "api/project/{0}/dataset/list-summaries".format(self._id_proj)
         response = requests.get(url, headers=self._header)
         json_ = response.json()
-        print("Status: ", response.status_code)
         if response.status_code >= 300:
             print("json: ", json_)
             df = pd.DataFrame(json_)
@@ -237,8 +236,6 @@ class ConnectMikeCloud:
 
         if name_ds != "" and id_ds == "":
             id_ds = self.query_ds_id(name_ds)
-            if id_ds == "":
-                raise ValueError("timeseries of name {0} does not exist".format(name_ds))
 
         confirm = query_yes_no("Are you sure you want to delete " + name_ds + " " + id_ds + " ?")
         if confirm is True:
@@ -263,10 +260,10 @@ class ConnectMikeCloud:
                 break
         return _id
 
-    def query_ds_id(self, ds_name):
+    def query_ds_id(self, name_ds):
         """
         function to query the dataset id with the help of function list_ds()
-        :param ds_name:
+        :param name_ds:
         :return: id of the dataset
         :rtype: str
         """
@@ -276,9 +273,12 @@ class ConnectMikeCloud:
         if df.empty:
             raise ValueError("no datasets found for this project")
         for i in range(len(df)):
-            if df["name"][i] == ds_name:
+            if df["name"][i] == name_ds:
                 _id = df["id"][i]
                 break
+        if _id == "":
+            raise ValueError("timeseries of name {0} does not exist".format(name_ds))
+
         return _id
 
 
@@ -359,15 +359,16 @@ class Dataset:
         """
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries/list".format(self._id)
         response = requests.get(url, headers=self._header)
-        print("Status: ", response.status_code)
+        if response.status_code >= 400:
+            raise ValueError("request failed")
         resp_dict = response.json()["data"]
         df = pd.DataFrame(resp_dict)
         return df
 
-    def query_ts_id(self, ts_name):
+    def query_ts_id(self, name_ts):
         """
         function to query timeseries id by its name
-        :param ts_name: timeseries name
+        :param name_ts: timeseries name
         :return: timeseries id
         :rtype: str
         """
@@ -376,9 +377,11 @@ class Dataset:
         if df.empty:
             raise ValueError("no timeseries found for this dataset")
         for i in range(len(df)):
-            if df["item"][i]["name"] == ts_name:
+            if df["item"][i]["name"] == name_ts:
                 _id = df["id"][i]
                 break
+        if _id == "":
+            raise ValueError("timeseries of name {0} does not exist".format(name_ts))
         return _id
 
     def get_ts(self, ts_name="", ts_id=""):
@@ -391,8 +394,7 @@ class Dataset:
         """
         if ts_name != "" and ts_id == "":
             ts_id = self.query_ts_id(ts_name)
-            if ts_id == "":
-                raise ValueError("timeseries of name {0} does not exist".format(ts_name))
+
         if ts_id == "":
             raise ValueError("id of timeseries was not defined or does not exist")
         self.ts = Timeseries(dataset=self, timeseries_id=ts_id)
@@ -443,7 +445,7 @@ class Dataset:
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
         dict_resp = response.json()
-        if response.status_code <= 400:
+        if response.status_code >= 400:
             raise ValueError("request failed")
 
         ts = Timeseries(dataset=self, timeseries_id=dict_resp["id"])
@@ -454,14 +456,13 @@ class Dataset:
         confirm = query_yes_no("Are you sure you want to delete " + self._id_proj + " ?")
         if confirm is True:
             response = requests.delete(url, headers=self.con.get_header())
-            print("Status: ", response.status_code)
+            if response.status_code >= 400:
+                raise ValueError("deletion request failed")
 
     def del_ts(self, timeseries_id="", timeseries_name=""):
 
         if timeseries_name != "" and timeseries_id == "":
             timeseries_id = self.query_ts_id(timeseries_name)
-            if timeseries_id == "":
-                raise ValueError("timeseries of name {0} does not exist".format(timeseries_name))
 
         confirm = query_yes_no("Are you sure you want to delete " + timeseries_name + " " + timeseries_id + " ?")
         if confirm is True:
