@@ -2,6 +2,7 @@ import requests
 import json
 import pandas as pd
 import sys
+import matplotlib.pyplot as plt
 
 
 class ConnectMikeCloud:
@@ -501,8 +502,8 @@ class Timeseries:
 
         response = requests.get(url, headers=self._header)
         print("Status: ", response.status_code)
-        if response.status_code > 300 and time_from is not None and time_to is not None:
-            raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
+        if response.status_code > 300 and time_from is not None or time_to is not None:
+            raise ValueError("request failed - validate that times are given in format {yyyy-MM-ddTHHmmss}")
         json_ = response.json()
         df = pd.DataFrame(json_["data"])
         df.rename(columns={0: 'timestamp', 1: 'value'}, inplace=True)
@@ -550,6 +551,31 @@ class Timeseries:
         resp_json = response.json()
         return resp_json
 
+    def plot(self, time_from=None, time_to=None):
+        """
+        function to plot data of the timeseries object
+        :param time_from: define from what timesteü to plot
+        :param time_to: define to what timestep to plot
+        """
+        df = None
+        if time_from is None and time_to is None:
+            df = self.get_data()
+
+        elif time_from is None and time_to is not None:
+            df = self.get_data(time_to=time_to)
+
+        elif time_from is not None and time_to is None:
+            df = self.get_data(time_from=time_from)
+
+        elif time_from is not None and time_to is not None:
+            df = self.get_data(time_from=time_from, time_to=time_to)
+
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df_data = df.set_index("timestamp")
+        ax = plt.gca()
+        df_data.plot(kind='line', ax=ax)
+        plt.show()
+
     def del_ts(self):
         pass
 
@@ -560,11 +586,27 @@ class Timeseries:
         pass
 
     def add_csv(self):
-
         pass
 
-    def del_data(self, time_from, time_to):
-        pass
+    def del_data(self, time_from, time_to=None):
+        """
+        function to delete data from timeseries; if no 'to' time defined will delete all values to latest timestep
+        :param time_from:
+        :param time_to:
+        :return:
+        """
+        if time_to is None:
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}" \
+                .format(self._id_ds, self._id, time_from)
+        else:
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2]&to={3}" \
+                .format(self._id_ds, self._id, time_from, time_to)
+
+        response = requests.delete(url, headers=self._header)
+        if response.status_code > 300:
+            raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
+        else:
+            print("Status: ", response.status_code)
 
 
 def query_yes_no(question, default="yes"):
