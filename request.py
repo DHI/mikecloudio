@@ -4,6 +4,8 @@ import pandas as pd
 import sys
 import matplotlib.pyplot as plt
 from pathlib import Path
+import warnings
+
 
 class ConnectMikeCloud:
     metadata_service_url = "https://core-metadata-prod.azurewebsites.net/"
@@ -31,7 +33,6 @@ class ConnectMikeCloud:
         else:
             self._id_proj = id_proj
             self._name_proj = name_proj
-
 
     def get_id(self):
         return self._id_proj
@@ -81,8 +82,8 @@ class ConnectMikeCloud:
             self._id_proj = self.query_proj_id(name)
         else:
             self._id_proj = id
-        self.proj = Project(id)
-        return self.proj
+        proj = Project(id)
+        return proj
 
     def list_ds(self):
         """
@@ -320,7 +321,6 @@ class Dataset:
 
         url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         response = requests.get(url, headers=self._header)
-        print("Status: ", response.status_code)
         json_ = response.json()
         return json_
 
@@ -358,10 +358,16 @@ class Dataset:
         if df.empty:
             raise ValueError("no timeseries found for this dataset")
 
+        count = 0
+
         for i in range(len(df)):
             if df["item"][i]["name"] == name:
                 _id = df["id"][i]
-                break
+                count += 1
+            if count >= 2:
+                warning = "Warning: {0} timeseries with name '{1}' exist. Choose by ID to avoid errors"\
+                    .format(count, name)
+                warnings.warn(warning)
 
         if _id == "":
             raise ValueError("timeseries of name {0} does not exist".format(name))
@@ -499,10 +505,12 @@ class Timeseries:
             raise ValueError("request failed - validate that times are given in format {yyyy-MM-ddTHHmmss}")
         json_ = response.json()
         df = pd.DataFrame(json_["data"])
-        columns = {0: "timestamp"}
+        js = self.get_info()
 
-        for i in range(len(df.columns)):
-            columns[i+1] ="value {0}".format(i+1)
+        columns = {0: "timestamp", 1: js["item"]["item"]}
+
+        for i in range(2, len(df.columns)):
+            columns[i] = js["dataFields"][i-2]["name"]
 
         df.rename(columns=columns, inplace=True)
 
@@ -520,10 +528,11 @@ class Timeseries:
         url = self.ds.con.metadata_service_url + "api/upload/{0}/timeseries/{1}/json".format(self._id_ds,
                                                                                              self._id)
         list_values = []
+        list_cur = []
 
         if not columns:
             for i in range(len(dataframe)):
-                list_cur = []
+                list_cur.clear()
                 list_cur.append("{0}".format(dataframe.index[i]))
                 for j in range(len(dataframe.columns)):
                     list_cur.append(dataframe.iloc[i][j])
@@ -532,7 +541,7 @@ class Timeseries:
 
         else:
             for i in range(len(dataframe)):
-                list_cur = []
+                list_cur.clear()
                 list_cur.append("{0}".format(dataframe.index[i]))
                 for j in range(len(columns)):
                     list_cur.append(dataframe[columns[j]].iloc[i])
@@ -540,6 +549,7 @@ class Timeseries:
 
         dict_ = {"data": list_values
                  }
+
         body = json.dumps(dict_)
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
@@ -557,11 +567,9 @@ class Timeseries:
         df.set_index(df.columns[0], inplace=True)
         self.add_data(df, columns=columns)
 
-
     def get_info(self):
         url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
         response = requests.get(url, headers=self._header)
-        print("Status: ", response.status_code)
         resp_json = response.json()
         return resp_json
 
@@ -588,8 +596,8 @@ class Timeseries:
 
         for j in range(1, len(df.columns)):
             for i in range(len(df)):
-                if isinstance(df.iloc[:,j][i], str):
-                    df.iloc[:,j][i] = None
+                if isinstance(df.iloc[:, j][i], str):
+                    df.iloc[:, j][i] = None
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df_data = df.set_index("timestamp")
@@ -603,7 +611,6 @@ class Timeseries:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
             response = requests.delete(url, headers=self._header)
             print("Status: ", response.status_code)
-
 
     def del_data(self, time_from, time_to=None):
         """
@@ -624,9 +631,6 @@ class Timeseries:
             raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
         else:
             print("Status: ", response.status_code)
-
-        def edit_prop(self):
-            pass
 
 
 def query_yes_no(question, default="yes"):
