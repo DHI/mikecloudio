@@ -50,7 +50,8 @@ class ConnectMikeCloud:
         """
         url = self.metadata_service_url + "api/project/list"
         response = requests.get(url, headers=self._header)
-        print("Status: ", response.status_code)
+        if response.status_code >= 300:
+            raise ValueError("request failed: check api key")
         json_ = response.json()
         df = pd.DataFrame(json_["data"])
         return df
@@ -62,7 +63,8 @@ class ConnectMikeCloud:
         """
         url = self.metadata_service_url + "api/transfer/upload-url"
         response = requests.get(url, headers=self._header)
-        print("Status: ", response.status_code)
+        if response.status_code >= 300:
+            raise ValueError("request failed: check api key")
         json_ = response.json()
         self._uploadURL = json_["data"]
         return json_["data"]
@@ -85,7 +87,7 @@ class ConnectMikeCloud:
         proj = Project(id)
         return proj
 
-    def list_ds(self):
+    def list_ds(self, extended=False):
         """
         function to list all datasets with project id
         :return:
@@ -93,19 +95,21 @@ class ConnectMikeCloud:
         """
         if self._id_proj == "":
             raise ValueError("set project ID with function setProject() first")
-
-        url = self.metadata_service_url + "api/project/{0}/dataset/list-summaries".format(self._id_proj)
+        if extended is True:
+            url = self.metadata_service_url + "api/project/{0}/dataset/list".format(self._id_proj)
+        else:
+            url = self.metadata_service_url + "api/project/{0}/dataset/list-summaries".format(self._id_proj)
         response = requests.get(url, headers=self._header)
         json_ = response.json()
         if response.status_code >= 300:
-            print("json: ", json_)
-            df = pd.DataFrame(json_)
+            print("json response: ", json_)
+            raise ValueError("request failed")
         else:
             df = pd.DataFrame(json_["data"])
 
         return df
 
-    def create_ds(self, name, descr, properties=None, metadata=None, content_type="application/json"):
+    def create_ds(self, name, descr, prop_ds=None, metadata_ds=None, prop_ts=None, content_type="application/json"):
         """
         function to create a new dataset
         :rtype: object
@@ -113,44 +117,67 @@ class ConnectMikeCloud:
         :type name: str
         :param descr: write something that describes the dataset
         :type descr: str 
-        :param properties: properties of the dataset can be added additionally as dict
-        :type properties: dict
-        :param metadata: metadata of the dataset can be added additionally as dict
-        :type metadata: dict
+        :param prop_ds: properties of the dataset can be added additionally as dict
+        :type prop_ds: dict
+        :param metadata_ds: metadata of the dataset can be added additionally as dict
+        :type metadata_ds: dict
+        :param prop_ts: the properties defined for the timeseries:
+        <name> and <dataType> must be included in the prop_ts dictionary.
+        Every property defined here must be defined in create_ts() properties too.
+        :type prop_ts: dict
         :param content_type: generally set to application/json;
         other options: text/plain, text/csv, text/json etc. (see api docs)
         :type content_type: str 
         :return: returns a new Dataset object
         """
-        if properties is None:
-            properties = {}
-        if metadata is None:
-            metadata = {}
+        if prop_ds is None:
+            prop_ds = {}
+        if metadata_ds is None:
+            metadata_ds = {}
+        if prop_ts is None:
+            prop_ts = []
+        if not isinstance(prop_ts, list):
+            raise ValueError("prop_ts must be of type list containing type dict")
+
+        types = ["DateTime", "Long", "Double", "Boolean", "Text"]
+        count = 0
+        for i in range(len(prop_ts)):
+            if "name" not in prop_ts[i].keys() or "dataType" not in prop_ts[i].keys():
+                raise ValueError("properties timeseries (prop_ts) must contain keys 'name' and 'dataType'")
+            for typ in types:
+                if prop_ts[i]["dataType"] == typ:
+                    count += 1
+        if count != len(prop_ts):
+            raise ValueError("dataType must be 'DateTime', 'Long', 'Double', 'Boolean' or 'Text'")
 
         if self._id_proj == "":
             raise ValueError("set project ID with function setProject() first")
+
         header = {'dhi-open-api-key': '{0}'.format(self._api_key), 'Content-Type': '{0}'.format(content_type),
                   'dhi-project-id': '{0}'.format(self._id_proj), 'dhi-service-id': "timeseries"}
 
         url = self.metadata_service_url + "api/ts/dataset"
 
         dict_ = {"timeSeriesSchema": {
-            "properties": [
-            ]
+            "properties":
+                prop_ts
+
         },
 
             "datasetProperties": {
                 "name": name,
                 "description": descr,
-                "metadata": metadata,
-                "properties": properties
+                "metadata": metadata_ds,
+                "properties": prop_ds
             }
 
         }
 
         body = json.dumps(dict_)
         response = requests.post(url, headers=header, data=body)
-        print("Status: ", response.status_code)
+        if response.status_code >= 300:
+            print("Status: ", response.status_code)
+            raise ValueError("request failed")
         json_ = response.json()
         ds = Dataset(connection=self, dataset_id=json_["id"])
         return ds
@@ -207,7 +234,9 @@ class ConnectMikeCloud:
         body = json.dumps(dict_)
 
         response = requests.put(url, headers=self._header, data=body)
-        print("Status: ", response.status_code)
+        if response.status_code >= 300:
+            raise ValueError("request failed")
+
         json_ = response.json()
         return json_
 
@@ -227,7 +256,8 @@ class ConnectMikeCloud:
         if confirm is True:
             url = self.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, id)
             response = requests.delete(url, headers=self._header)
-            print("Status: ", response.status_code)
+            if response.status_code >= 300:
+                raise ValueError("request failed")
 
     def query_proj_id(self, name):
         """
@@ -303,14 +333,16 @@ class Dataset:
 
         body = json.dumps(dict_)
         response = requests.put(url, headers=self._header, data=body)
-        print("Status: ", response.status_code)
+        if response.status_code >= 300:
+            raise ValueError("request failed")
+
         json_ = response.json()
         return json_
 
     def get_id(self):
         return self._id
 
-    def get_info(self):
+    def get_info(self, extended=False):
         """
         function to get dataset details
         :return: json with details
@@ -319,7 +351,10 @@ class Dataset:
         if self._id == "":
             raise ValueError("dataset id not set")
 
-        url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
+        if extended is True:
+            url = self.con.metadata_service_url + "api/ts/{0}".format(self._id)
+        else:
+            url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         response = requests.get(url, headers=self._header)
         json_ = response.json()
         return json_
@@ -428,6 +463,23 @@ class Dataset:
             properties = {}
         if not isinstance(properties, dict):
             raise ValueError("properties must be of type dictionary")
+
+        js = self.get_info(extended=True)
+        if len(js["timeSeriesProperties"]) != len(properties):
+            raise ValueError(
+                "properties size must fit to size of timeSeriesProperties defined in corresponding dataset. "
+                "timeSeriesProperties: {0}".format(js["timeSeriesProperties"]))
+
+        count = 0
+        for key in properties:
+            for i in range(len(js["timeSeriesProperties"])):
+                if key == js["timeSeriesProperties"][i]["name"]:
+                    count += 1
+
+        if count is not len(properties):
+            raise ValueError("properties name must fit to name defined in dataset - timeSeriesProperties: {0}".format(
+                js["timeSeriesProperties"]))
+
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id)
 
         dict_ = {
@@ -444,11 +496,15 @@ class Dataset:
 
         body = json.dumps(dict_)
         response = requests.post(url, headers=self._header, data=body)
-        print("Status: ", response.status_code)
-        dict_resp = response.json()
-        if response.status_code >= 400:
+        if response.status_code >= 300 and properties is not None:
+            print("Status: ", response.status_code)
+            raise ValueError("request failed: "
+                             "make sure that dataType of dataset-timeseriesProperties fits to data type in properties")
+        if response.status_code >= 300:
+            print("Status: ", response.status_code)
             raise ValueError("request failed")
 
+        dict_resp = response.json()
         ts = Timeseries(dataset=self, timeseries_id=dict_resp["id"])
         return ts
 
@@ -457,7 +513,7 @@ class Dataset:
         confirm = query_yes_no("Are you sure you want to delete " + self._id_proj + " ?")
         if confirm is True:
             response = requests.delete(url, headers=self.con.get_header())
-            if response.status_code >= 400:
+            if response.status_code >= 300:
                 raise ValueError("deletion request failed")
 
     def del_ts(self, name="", id=""):
@@ -469,7 +525,8 @@ class Dataset:
         if confirm is True:
             url = self.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id, id)
             response = requests.delete(url, headers=self._header)
-            print("Status: ", response.status_code)
+            if response.status_code >= 300:
+                raise ValueError("deletion request failed")
 
 
 class Timeseries:
@@ -500,7 +557,7 @@ class Timeseries:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}&to={3}"\
                 .format(self._id_ds, self._id, time_from, time_to)
         response = requests.get(url, headers=self._header)
-        print("Status: ", response.status_code)
+
         if response.status_code > 300 and time_from is not None or response.status_code > 300 and time_to is not None:
             raise ValueError("request failed - validate that times are given in format {yyyy-MM-ddTHHmmss}")
         json_ = response.json()
@@ -552,7 +609,6 @@ class Timeseries:
 
         body = json.dumps(dict_)
         response = requests.post(url, headers=self._header, data=body)
-        print("Status: ", response.status_code)
         if response.status_code < 300:
             print("added {0} values to {1}".format(len(list_values), self._id))
         elif response.status_code == 500:
@@ -570,6 +626,9 @@ class Timeseries:
     def get_info(self):
         url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
         response = requests.get(url, headers=self._header)
+        if response.status_code >= 300:
+            raise ValueError("GET request failed")
+
         resp_json = response.json()
         return resp_json
 
@@ -610,7 +669,8 @@ class Timeseries:
         if confirm is True:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
             response = requests.delete(url, headers=self._header)
-            print("Status: ", response.status_code)
+            if response.status_code >= 300:
+                raise ValueError("deletion request failed")
 
     def del_data(self, time_from, time_to=None):
         """
@@ -629,8 +689,6 @@ class Timeseries:
         response = requests.delete(url, headers=self._header)
         if response.status_code > 300:
             raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
-        else:
-            print("Status: ", response.status_code)
 
 
 def query_yes_no(question, default="yes"):
