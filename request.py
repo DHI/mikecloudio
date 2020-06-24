@@ -3,38 +3,35 @@ import json
 import pandas as pd
 import sys
 import matplotlib.pyplot as plt
-
+from pathlib import Path
 
 class ConnectMikeCloud:
     metadata_service_url = "https://core-metadata-prod.azurewebsites.net/"
 
-    def __init__(self, api_key, id_proj="", proj=None, ds_object=None):
+    def __init__(self, api_key, id_proj=None, name_proj=None, ds_object=None):
         """
         this class creates a connection to MIKE CLOUD and can be used to list get all projects, get datasets of projects
         create, update, and delete datasets
         :param api_key: api key that gives access to desired projects
         :type api_key: str
-        :param id_proj:
+        :param id_proj: project ID
         :type id_proj: str
-        :param proj:
-        :type proj: object
+        :param name_proj: name of the project
+        :type name_proj: str
         """
 
         self._api_key = api_key
         self._header = {'dhi-open-api-key': '{0}'.format(self._api_key)}
         self._uploadURL = ""
         self.ds = ds_object
-        if proj is None:
-            self.proj = proj
 
-        if id_proj != "":
-            self.proj = Project(id_proj)
-            self._id_proj = id_proj
+        if id_proj is None:
+            self._id_proj = self.query_proj_id(name_proj)
 
         else:
-            self.proj = proj
             self._id_proj = id_proj
-            self.proj = Project(self._id_proj)
+            self._name_proj = name_proj
+
 
     def get_id(self):
         return self._id_proj
@@ -304,7 +301,6 @@ class Dataset:
         }
 
         body = json.dumps(dict_)
-        print(body)
         response = requests.put(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
         json_ = response.json()
@@ -361,13 +357,29 @@ class Dataset:
         _id = ""
         if df.empty:
             raise ValueError("no timeseries found for this dataset")
+
         for i in range(len(df)):
             if df["item"][i]["name"] == name:
                 _id = df["id"][i]
                 break
+
         if _id == "":
             raise ValueError("timeseries of name {0} does not exist".format(name))
         return _id
+
+    def check_ts_exist(self, name):
+        df = self.list_ts()
+        state = False
+        if df.empty:
+            print("no timeseries found for this dataset")
+            state = False
+            return state
+
+        for i in range(len(df)):
+            if df["item"][i]["name"] == name:
+                state = True
+                break
+        return state
 
     def get_ts(self, name="", id=""):
         """
@@ -425,7 +437,6 @@ class Dataset:
         }
 
         body = json.dumps(dict_)
-        print(body)
         response = requests.post(url, headers=self._header, data=body)
         print("Status: ", response.status_code)
         dict_resp = response.json()
@@ -540,6 +551,12 @@ class Timeseries:
         else:
             raise ValueError("failed POST request.")
 
+    def add_csv(self, path, columns=None):
+        path = Path(path)
+        df = pd.read_csv(path)
+        df.set_index(df.columns[0], inplace=True)
+        self.add_data(df, columns=columns)
+
 
     def get_info(self):
         url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
@@ -587,12 +604,6 @@ class Timeseries:
             response = requests.delete(url, headers=self._header)
             print("Status: ", response.status_code)
 
-    def edit_prop(self):
-        pass
-
-
-    def add_csv(self):
-        pass
 
     def del_data(self, time_from, time_to=None):
         """
@@ -613,6 +624,9 @@ class Timeseries:
             raise ValueError("request failed. make sure times are in format {yyyy-MM-ddTHHmmss}")
         else:
             print("Status: ", response.status_code)
+
+        def edit_prop(self):
+            pass
 
 
 def query_yes_no(question, default="yes"):
