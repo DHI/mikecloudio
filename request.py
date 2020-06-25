@@ -20,6 +20,8 @@ class ConnectMikeCloud:
         :type id_proj: str
         :param name_proj: name of the project
         :type name_proj: str
+        :param ds_object: instance of dataset if already created from another connection
+        :type ds_object: Dataset
         """
 
         self._api_key = api_key
@@ -42,12 +44,24 @@ class ConnectMikeCloud:
 
 
     def get_id(self):
+        """
+        Getter for project id
+        :return: project id
+        """
         return self._id_proj
 
     def get_api_key(self):
+        """
+        Getter for API KEY
+        :return: API KEY
+        """
         return self._api_key
 
     def get_header(self):
+        """
+        Getter for header
+        :return: header
+        """
         return self._header
 
     def list_projects(self):
@@ -66,7 +80,8 @@ class ConnectMikeCloud:
     def get_upload_url(self):
         """
         function to request upload url
-        :return: str
+        :return: upload url
+        :rtype: str
         """
         url = self.metadata_service_url + "api/transfer/upload-url"
         response = requests.get(url, headers=self._header)
@@ -84,7 +99,7 @@ class ConnectMikeCloud:
         :param name: project name according to list_project() request
         :type name: str
         :return: Project object
-        :rtype: object
+        :rtype: Project
         """
 
         if name != "" and id == "":
@@ -97,7 +112,9 @@ class ConnectMikeCloud:
     def list_ds(self, extended=False):
         """
         function to list all datasets with project id
-        :return:
+        :param extended: if set to true a different request is made with alternative response
+        :type extended: bool
+        :return: dataframe with all datasets
         :rtype: pd.DataFrame
         """
         if self._id_proj == "":
@@ -128,14 +145,17 @@ class ConnectMikeCloud:
         :type prop_ds: dict
         :param metadata_ds: metadata of the dataset can be added additionally as dict
         :type metadata_ds: dict
-        :param prop_ts: the properties defined for the timeseries:
-        <name> and <dataType> must be included in the prop_ts dictionary.
+        :param prop_ts: defines the properties for the timeseries:
+        <name> and <dataType> must be included in the dictionaries of the prop_ts list.
         Every property defined here must be defined in create_ts() properties too.
-        :type prop_ts: dict
-        :param content_type: generally set to application/json;
+        Example: [{"name": "a1", "dataType": "Text"},..]
+        Types allowed: "DateTime", "Long", "Double", "Boolean", "Text"
+        :type prop_ts: list
+        :param content_type: default set to application/json;
         other options: text/plain, text/csv, text/json etc. (see api docs)
         :type content_type: str 
         :return: returns a new Dataset object
+        :rtype: Dataset
         """
         if prop_ds is None:
             prop_ds = {}
@@ -192,10 +212,10 @@ class ConnectMikeCloud:
     def get_ds(self, name="", id=""):
         """
         function to create a Dataset object according the project id / or project name
-        :param id:
-        :param name:
-        :return: Dataset object
-        :rtype: object
+        :param id: ID of dataset
+        :param name: name of dataset
+        :return: Dataset instance
+        :rtype: Dataset
         """
         if name != "" and id == "":
             id = self.query_ds_id(name)
@@ -276,7 +296,7 @@ class ConnectMikeCloud:
     def query_proj_id(self, name):
         """
         function to query the project id with the help of function list_projects()
-        :param name:
+        :param name: name of project
         :return: id of the project
         :rtype: str
         """
@@ -292,9 +312,10 @@ class ConnectMikeCloud:
 
     def query_proj_name(self, id_proj):
         """
-        function to query the project id with the help of function list_projects()
-        :param id_proj:
+        function to query the project name with the help of function list_projects()
+        :param id_proj: id of the project
         :return: id of the project
+        :return: project name
         :rtype: str
         """
         df = self.list_projects()
@@ -310,7 +331,7 @@ class ConnectMikeCloud:
     def query_ds_id(self, name):
         """
         function to query the dataset id with the help of function list_ds()
-        :param name:
+        :param name: name of the dataset
         :return: id of the dataset
         :rtype: str
         """
@@ -406,12 +427,19 @@ class Dataset:
         return json_
 
     def get_id(self):
+        """
+        Getter function for dataset ID
+        :return: ID of instance
+        """
         return self._id
 
     def get_info(self, extended=False):
         """
         function to get dataset details
-        :return: json with details
+        :param extended: set to True if extra information needed.
+        :type extended: bool
+        :return: dictionary with details
+        :rtype: dict
         """
 
         if self._id == "":
@@ -422,8 +450,8 @@ class Dataset:
         else:
             url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         response = requests.get(url, headers=self._header)
-        json_ = response.json()
-        return json_
+        dict_ = response.json()
+        return dict_
 
     def set_ds_id(self, dataset_id):
         """
@@ -436,7 +464,7 @@ class Dataset:
     def list_ts(self):
         """
         request all timeseries related to dataset it
-        :return: dataframe with response
+        :return: dataframe with all timeseries in dataset
         :rtype: pd.DataFrame
         """
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries/list".format(self._id)
@@ -449,9 +477,9 @@ class Dataset:
 
     def query_ts_id(self, name):
         """
-        function to query timeseries id by its name
+        function to query timeseries ID by its name
         :param name: timeseries name
-        :return: timeseries id
+        :return: timeseries ID
         :rtype: str
         """
         df = self.list_ts()
@@ -476,9 +504,9 @@ class Dataset:
 
     def query_ts_name(self, id):
         """
-        function to query timeseries id by its name
-        :param id: timeseries name
-        :return: timeseries id
+        function to query timeseries name by its ID
+        :param id: timeseries ID
+        :return: timeseries name
         :rtype: str
         """
         df = self.list_ts()
@@ -495,6 +523,12 @@ class Dataset:
         return _name
 
     def check_ts_exist(self, name):
+        """
+        function to check if timeseries exists in dataset
+        :param name: name of timeseries
+        :return: state true if exists otherwise false
+        :rtype: bool
+        """
         df = self.list_ts()
         state = False
         if df.empty:
@@ -512,9 +546,11 @@ class Dataset:
         """
         function to get_ts by name or id and return a Timeseries object
         :param name: timeseries name
+        :type name: str
         :param id: timeseries id
+        :type id: str
         :return: Timeseries object
-        :rtype: object
+        :rtype: Timeseries
         """
         if name != "" and id == "":
             id = self.query_ts_id(name)
@@ -531,14 +567,18 @@ class Dataset:
         function to create a timeseries
         :param name: desired name of timeseries
         :type name: str
-        :param unit: default "eumUmeter"
-        :param item: default "eumIWaterLevel"
-        :param data_type: default "Single"
-        :param data_fields: additional values can be assigned of type single, text or flag
+        :param unit: unit value - must be part of DHI convention
+        :type unit: str
+        :param item: parameter value - must be part of DHI convention
+        :type item: str
+        :param data_type: accepted data types: Text, Date, Int32, Int64, Single, Double, Int16
+        :param data_fields: define how many columns the timeseries comprises and their names and dataTypes.
+        List of dictionaries, example: [{"name": "pressure", "dataType": "Double"},..,{}]
+        possible data field dataTypes: DateTime, Single, Double, Flag, Text
         :type data_fields: list
-        :param properties: assign additional properties
+        :param properties: assign additional properties for the timeseries as defined in the dataset timeseries schema
         :return: returns an instance of Timeseries corresponding to the created one
-        :rtype: object
+        :rtype: Timeseries
         """
         if data_fields is None:
             data_fields = []
@@ -600,6 +640,9 @@ class Dataset:
         return ts
 
     def del_ds(self):
+        """
+        function to delete dataset of the current instance
+        """
         url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         confirm = query_yes_no("Are you sure you want to delete " + self._id_proj + " ?")
         if confirm is True:
@@ -608,7 +651,11 @@ class Dataset:
                 raise ValueError("deletion request failed")
 
     def del_ts(self, name="", id=""):
-
+        """
+        function to delete a timeseries based on name or id
+        :param name: name of timeseries
+        :param id: ID of timeseries
+        """
         if name != "" and id == "":
             id = self.query_ts_id(name)
 
