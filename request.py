@@ -465,20 +465,25 @@ class Dataset:
             raise ValueError("properties must be of type dictionary")
 
         js = self.get_info(extended=True)
-        if len(js["timeSeriesProperties"]) != len(properties):
-            raise ValueError(
-                "properties size must fit to size of timeSeriesProperties defined in corresponding dataset. "
-                "timeSeriesProperties: {0}".format(js["timeSeriesProperties"]))
-
-        count = 0
+        state = False
         for key in properties:
             for i in range(len(js["timeSeriesProperties"])):
                 if key == js["timeSeriesProperties"][i]["name"]:
-                    count += 1
-
-        if count is not len(properties):
-            raise ValueError("properties name must fit to name defined in dataset - timeSeriesProperties: {0}".format(
-                js["timeSeriesProperties"]))
+                    state = True
+            if not state:
+                raise ValueError(
+                    "properties name must fit to name defined in dataset - timeSeriesProperties: \n{0}".format(
+                        js["timeSeriesProperties"]))
+        datafield_types = ["DateTime", "Single", "Double", "Flag", "Text"]
+        format_cor = False
+        for i in range(len(data_fields)):
+            for j in range(len(datafield_types)):
+                if data_fields[i]["dataType"] == datafield_types[j]:
+                    format_cor = True
+            if not format_cor:
+                raise ValueError(
+                    "dataTypes of data fields must be of the following types: \n{0}".format(
+                        datafield_types))
 
         url = self.con.metadata_service_url + "api/ts/{0}/timeseries".format(self._id)
 
@@ -496,7 +501,7 @@ class Dataset:
 
         body = json.dumps(dict_)
         response = requests.post(url, headers=self._header, data=body)
-        if response.status_code >= 300 and properties is not None:
+        if response.status_code == 500 and properties is not None:
             print("Status: ", response.status_code)
             raise ValueError("request failed: "
                              "make sure that dataType of dataset-timeseriesProperties fits to data type in properties")
@@ -544,6 +549,7 @@ class Timeseries:
                         }
 
     def get_data(self, time_from=None, time_to=None):
+        url = None
         if time_from is None and time_to is None:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values"\
                 .format(self._id_ds, self._id)
@@ -560,7 +566,10 @@ class Timeseries:
 
         if response.status_code > 300 and time_from is not None or response.status_code > 300 and time_to is not None:
             raise ValueError("request failed - validate that times are given in format {yyyy-MM-ddTHHmmss}")
+
         json_ = response.json()
+        if response.status_code > 300:
+            return json_
         df = pd.DataFrame(json_["data"])
         js = self.get_info()
 
@@ -576,32 +585,58 @@ class Timeseries:
     def add_data(self, dataframe, columns=None):
         """
         add data to Mike Cloud API in form of a dataframe
-        :param dataframe: dataframe containing data with timeseries as index
+        :param dataframe: dataframe containing data with timestamp as index; order of columns
+        must correspond to 1st: main value, 2-nth: dataFields order
         :type dataframe: pandas.core.frame.DataFrame
-        :param columns: list of names of additional columns within the dataframe
+        :param columns: list of names of additional columns within the dataframe;
+        list values must correspond to 1st: main value, 2-nth: dataFields order
         :type columns: list
         :return:
         """
         url = self.ds.con.metadata_service_url + "api/upload/{0}/timeseries/{1}/json".format(self._id_ds,
                                                                                              self._id)
+        if 0 in dataframe.index:
+            raise ValueError("dataframe index must be set to timestamp")
+
         list_values = []
         list_cur = []
+        js = self.get_info()
 
         if not columns:
+            if len(dataframe.columns)-1 != len(js["dataFields"]):
+                raise ValueError("dataframe amount of columns must fit to dataFields defined in timeseries: "
+                                 "specify columns or adjust dataframe size (example: "
+                                 "2 dataFields are defined plus the main value -> dataframe must contain 3 columns.\n "
+                                 "Defined DataFields: \n{0}".format(js["dataFields"]))
             for i in range(len(dataframe)):
                 list_cur.clear()
                 list_cur.append("{0}".format(dataframe.index[i]))
                 for j in range(len(dataframe.columns)):
                     list_cur.append(dataframe.iloc[i][j])
+                    if j < len(dataframe.columns)-1:
+                        if js["dataFields"][j]["name"] != dataframe.columns[j+1]:
+                            warning = "make sure order of columns correspond to 1st: main value, 2-nth: " \
+                                      "dataFields order.\nDefined DataFields: \n{0}".format(js["dataFields"])
+                            warnings.warn(warning)
 
                 list_values.append(list_cur)
 
         else:
+            if len(columns)-1 != len(js["dataFields"]):
+                raise ValueError("Amount of columns must fit to dataFields defined in timeseries: "
+                                 "specify columns or adjust dataframe size (example: "
+                                 "2 dataFields are defined plus the main value -> 3 columns must be given).\n"
+                                 "Defined DataFields: \n{0}".format(js["dataFields"]))
             for i in range(len(dataframe)):
                 list_cur.clear()
                 list_cur.append("{0}".format(dataframe.index[i]))
                 for j in range(len(columns)):
                     list_cur.append(dataframe[columns[j]].iloc[i])
+                    if j < len(dataframe.columns)-1:
+                        if js["dataFields"][j]["name"] != dataframe.columns[j + 1]:
+                            warning = "make sure order of columns correspond to 1st: main value, 2-nth: " \
+                                      "dataFields order.\nDefined DataFields: \n{0}".format(js["dataFields"])
+                            warnings.warn(warning)
                 list_values.append(list_cur)
 
         dict_ = {"data": list_values
