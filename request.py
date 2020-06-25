@@ -10,7 +10,7 @@ import warnings
 class ConnectMikeCloud:
     metadata_service_url = "https://core-metadata-prod.azurewebsites.net/"
 
-    def __init__(self, api_key, id_proj=None, name_proj=None, ds_object=None):
+    def __init__(self, api_key, id_proj="", name_proj="", ds_object=""):
         """
         this class creates a connection to MIKE CLOUD and can be used to list get all projects, get datasets of projects
         create, update, and delete datasets
@@ -26,13 +26,20 @@ class ConnectMikeCloud:
         self._header = {'dhi-open-api-key': '{0}'.format(self._api_key)}
         self._uploadURL = ""
         self.ds = ds_object
+        self._id_proj = id_proj
+        self._name_proj = name_proj
 
-        if id_proj is None:
+        if id_proj == "" and name_proj != "":
             self._id_proj = self.query_proj_id(name_proj)
-
-        else:
-            self._id_proj = id_proj
             self._name_proj = name_proj
+
+        elif id_proj != "" and name_proj == "":
+            self._name_proj = self.query_proj_name(id_proj)
+            self._id_proj = id_proj
+
+        if self._id_proj == "" and self._name_proj == "":
+            warnings.warn("neither project ID nor project name set. Call function set_project()")
+
 
     def get_id(self):
         return self._id_proj
@@ -179,7 +186,7 @@ class ConnectMikeCloud:
             print("Status: ", response.status_code)
             raise ValueError("request failed")
         json_ = response.json()
-        ds = Dataset(connection=self, dataset_id=json_["id"])
+        ds = Dataset(connection=self, id_dataset=json_["id"])
         return ds
 
     def get_ds(self, name="", id=""):
@@ -192,11 +199,18 @@ class ConnectMikeCloud:
         """
         if name != "" and id == "":
             id = self.query_ds_id(name)
+
             if id == "":
                 raise ValueError("dataset of name {0} does not exist".format(name))
-        if id == "":
-            raise ValueError("id of dataset was not defined or does not exist")
-        self.ds = Dataset(connection=self, dataset_id=id)
+            self.ds = Dataset(connection=self, name_dataset=name)
+
+        if name != "" and id != "":
+            self.ds = Dataset(connection=self, id_dataset=id, name_dataset=name)
+
+        else:
+            if id == "":
+                raise ValueError("id of dataset was not defined or does not exist")
+            self.ds = Dataset(connection=self, id_dataset=id)
         return self.ds
 
     # updates a Dataset: not tested yet
@@ -276,6 +290,23 @@ class ConnectMikeCloud:
                 break
         return _id
 
+    def query_proj_name(self, id_proj):
+        """
+        function to query the project id with the help of function list_projects()
+        :param id_proj:
+        :return: id of the project
+        :rtype: str
+        """
+        df = self.list_projects()
+        _name = ""
+        if df.empty:
+            raise ValueError("no projects found for this api token")
+        for i in range(len(df)):
+            if df["id"][i] == id_proj:
+                _name = df["name"][i]
+                break
+        return _name
+
     def query_ds_id(self, name):
         """
         function to query the dataset id with the help of function list_ds()
@@ -297,19 +328,54 @@ class ConnectMikeCloud:
 
         return _id
 
+    def query_ds_name(self, id):
+        """
+        function to query the dataset id with the help of function list_ds()
+        :param id: dataset id
+        :return: name of the dataset
+        :rtype: str
+        """
+        df = self.list_ds()
+        _name = ""
+
+        if df.empty:
+            raise ValueError("no datasets found for this project")
+        for i in range(len(df)):
+            if df["id"][i] == id:
+                _name = df["name"][i]
+                break
+        if _name == "":
+            raise ValueError("dataset of id {0} does not exist".format(id))
+
+        return _name
+
 
 class Project:
 
-    def __init__(self, project_id):
-        self._id = project_id
+    def __init__(self, id_project="", name_project=""):
+        self._id = id_project
+        self._name = name_project
 
 
 class Dataset:
 
-    def __init__(self, connection, dataset_id=""):
+    def __init__(self, connection, id_dataset="", name_dataset=""):
         self.con = connection
         self._id_proj = connection.get_id()
-        self._id = dataset_id
+        self._id = id_dataset
+        self._name = name_dataset
+
+        if id_dataset == "" and name_dataset != "":
+            self._id = self.con.query_ds_id(name_dataset)
+            self._name = name_dataset
+
+        elif id_dataset != "" and name_dataset == "":
+            self._name = self.con.query_ds_name(id_dataset)
+            self._id = id_dataset
+
+        if self._id == "" and self._name == "":
+            warnings.warn("neither dataset id nor dataset name were not defined (at least one value required).")
+
         self.ts = None
         self._header = {'dhi-open-api-key': '{0}'.format(connection.get_api_key()),
                         'Content-Type': 'application/json',
@@ -408,6 +474,26 @@ class Dataset:
             raise ValueError("timeseries of name {0} does not exist".format(name))
         return _id
 
+    def query_ts_name(self, id):
+        """
+        function to query timeseries id by its name
+        :param id: timeseries name
+        :return: timeseries id
+        :rtype: str
+        """
+        df = self.list_ts()
+        _name = ""
+        if df.empty:
+            raise ValueError("no timeseries found for this dataset")
+
+        for i in range(len(df)):
+            if df["id"][i] == id:
+                _name = df["item"][i]["name"]
+
+        if _name == "":
+            raise ValueError("timeseries with id {0} does not exist".format(id))
+        return _name
+
     def check_ts_exist(self, name):
         df = self.list_ts()
         state = False
@@ -435,7 +521,7 @@ class Dataset:
 
         if id == "":
             raise ValueError("id of timeseries was not defined or does not exist")
-        self.ts = Timeseries(dataset=self, timeseries_id=id)
+        self.ts = Timeseries(dataset=self, id_timeseries=id, name_timeseries=name)
         return self.ts
 
     # muss noch auf properties angepasst werden
@@ -510,7 +596,7 @@ class Dataset:
             raise ValueError("request failed")
 
         dict_resp = response.json()
-        ts = Timeseries(dataset=self, timeseries_id=dict_resp["id"])
+        ts = Timeseries(dataset=self, id_timeseries=dict_resp["id"])
         return ts
 
     def del_ds(self):
@@ -536,11 +622,24 @@ class Dataset:
 
 class Timeseries:
 
-    def __init__(self, dataset, timeseries_id):
+    def __init__(self, dataset, id_timeseries="", name_timeseries=""):
         self.ds = dataset
-        self._id = timeseries_id
-        self._id_proj = self.ds.con.get_id()
         self._id_ds = self.ds.get_id()
+        self._id_proj = self.ds.con.get_id()
+        self._id = id_timeseries
+        self._name = name_timeseries
+
+        if id_timeseries == "" and name_timeseries != "":
+            self._id = self.ds.query_ts_id(name_timeseries)
+            self._name = name_timeseries
+
+        elif id_timeseries != "" and name_timeseries == "":
+            self._name = self.ds.query_ts_name(id_timeseries)
+            self._id = id_timeseries
+
+        if self._name == "" and self._id == "":
+            warnings.warn("neither timeseries id nor timerseries name were not defined (at least one value required).")
+
         self._header = {'dhi-open-api-key': '{0}'.format(self.ds.con.get_api_key()),
                         'Content-Type': 'application/json',
                         'dhi-project-id': '{0}'.format(self._id_proj),
