@@ -695,6 +695,15 @@ class Timeseries:
                         }
 
     def get_data(self, time_from=None, time_to=None):
+        """
+        function to request data in timeseries
+        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.
+        If None, will return from first timestamp.
+        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.
+        If None, will return up to latest timestamp.
+        :return: dataframe containing the timeseries data
+        :rtype: pd.DataFrame
+        """
         url = None
         if time_from is None and time_to is None:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values"\
@@ -737,7 +746,6 @@ class Timeseries:
         :param columns: list of names of additional columns within the dataframe;
         list values must correspond to 1st: main value, 2-nth: dataFields order
         :type columns: list
-        :return:
         """
         url = self.ds.con.metadata_service_url + "api/upload/{0}/timeseries/{1}/json".format(self._id_ds,
                                                                                              self._id)
@@ -799,25 +807,46 @@ class Timeseries:
             raise ValueError("failed POST request.")
 
     def add_csv(self, path, columns=None):
+        """
+        add data in form of a csv-file. Format required:
+        1st column: timestamp, 2nd: main value, 3rd - nth: additional values according to defined dataFields
+        in timeseries
+        :param path: path of csv-file
+        :type path: str
+        :param columns: optional to define which columns to be added. Format:
+        [<main value>, <additional values according to dataFields>, <additional values according to dataFields>, ...]
+        :type columns: list
+        """
         path = Path(path)
         df = pd.read_csv(path)
         df.set_index(df.columns[0], inplace=True)
         self.add_data(df, columns=columns)
 
     def get_info(self):
+        """
+        get detailled information about timeseries
+        :return: a dictionary with the information
+        :rtype: dict
+        """
         url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
         response = requests.get(url, headers=self._header)
         if response.status_code >= 300:
             raise ValueError("GET request failed")
 
-        resp_json = response.json()
-        return resp_json
+        dict_ = response.json()
+        return dict_
 
-    def plot(self, time_from=None, time_to=None):
+    def plot(self, time_from=None, time_to=None, columns=None):
         """
         function to plot data of the timeseries object
-        :param time_from: define from what timesteü to plot
-        :param time_to: define to what timestep to plot
+        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.
+        If None, will return from first timestamp.
+        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.
+        If None, will return up to latest timestamp.
+        :param columns: a list of the column names to be plotted
+        :type list
+        :return: figure to adapt visualization
+        :rtype: matplotlib.figure.Figure
         """
         df = None
         if time_from is None and time_to is None:
@@ -833,7 +862,6 @@ class Timeseries:
             df = self.get_data(time_from=time_from, time_to=time_to)
         if df.empty:
             raise ValueError("no data in timeseries")
-
         for j in range(1, len(df.columns)):
             for i in range(len(df)):
                 if isinstance(df.iloc[:, j][i], str):
@@ -841,11 +869,22 @@ class Timeseries:
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df_data = df.set_index("timestamp")
-        ax = plt.gca()
-        df_data.plot(kind='line', ax=ax)
-        plt.show()
+        fig, ax = plt.subplots()
+        if columns is not None:
+            if not isinstance(columns, list):
+                raise ValueError("columns parameter must be a list")
+            for i in range(len(columns)):
+                df_data[columns[i]].plot(kind="line", ax=ax, title=self._name, legend=True)
+        else:
+            df_data.plot(kind='line', ax=ax, title=self._name, legend=True)
+        plt.legend(loc='upper left', bbox_to_anchor=(1.0, 0.5))
+        plt.close(fig)
+        return fig
 
     def del_ts(self):
+        """
+        function to delete corresponding timeseries of the timeseries instance
+        """
         confirm = query_yes_no("Are you sure you want to delete " + self._id + " ?")
         if confirm is True:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}".format(self._id_ds, self._id)
@@ -856,8 +895,10 @@ class Timeseries:
     def del_data(self, time_from, time_to=None):
         """
         function to delete data from timeseries; if no 'to' time defined will delete all values to latest timestep
-        :param time_from:
-        :param time_to:
+        :param time_from: specify from what timestamp data is deleted; format: yyyy-mm-ddThhmmss.
+        If None, will delete all data from first timestamp.
+        :param time_to: specify to what timestamp data is deleted; format: yyyy-mm-ddThhmmss.
+        If None, will return up to latest timestamp.
         :return:
         """
         if time_to is None:
