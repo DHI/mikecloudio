@@ -73,6 +73,8 @@ class ConnectMikeCloud:
         response = requests.get(url, headers=self._header)
         if response.status_code >= 300:
             raise ValueError("request failed: check api key")
+        if response.status_code == 401:
+            raise ValueError("not authorized to make this request")
         json_ = response.json()
         df = pd.DataFrame(json_["data"])
         return df
@@ -125,9 +127,12 @@ class ConnectMikeCloud:
             url = self.metadata_service_url + "api/project/{0}/dataset/list-summaries".format(self._id_proj)
         response = requests.get(url, headers=self._header)
         json_ = response.json()
-        if response.status_code >= 300:
+        if response.status_code == 401:
+            raise ValueError("not authorized to make this request")
+        elif response.status_code >= 300:
             print("json response: ", json_)
             raise ValueError("request failed")
+
         else:
             df = pd.DataFrame(json_["data"])
 
@@ -202,10 +207,13 @@ class ConnectMikeCloud:
 
         body = json.dumps(dict_)
         response = requests.post(url, headers=header, data=body)
-        if response.status_code >= 300:
-            print("Status: ", response.status_code)
-            raise ValueError("request failed")
         json_ = response.json()
+
+        if response.status_code == 401:
+            raise ValueError("not authorized to make this request")
+        elif response.status_code >= 300:
+            print("json response: ", json_)
+            raise ValueError("request failed")
         ds = Dataset(connection=self, id_dataset=json_["id"])
         return ds
 
@@ -290,8 +298,11 @@ class ConnectMikeCloud:
         if confirm is True:
             url = self.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, id)
             response = requests.delete(url, headers=self._header)
-            if response.status_code >= 300:
+            if response.status_code == 401:
+                raise ValueError("not authorized to make this request")
+            elif response.status_code >= 300:
                 raise ValueError("request failed")
+
 
     def query_proj_id(self, name):
         """
@@ -905,7 +916,7 @@ class Timeseries:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}" \
                 .format(self._id_ds, self._id, time_from)
         else:
-            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2]&to={3}" \
+            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}&to={3}" \
                 .format(self._id_ds, self._id, time_from, time_to)
 
         response = requests.delete(url, headers=self._header)
