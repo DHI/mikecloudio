@@ -903,7 +903,7 @@ class Timeseries:
             if response.status_code >= 300:
                 raise ValueError("deletion request failed")
 
-    def del_data(self, time_from, time_to=None):
+    def del_data(self, time_from=None, time_to=None):
         """
         function to delete data from timeseries; if no 'to' time defined will delete all values to latest timestep
         :param time_from: specify from what timestamp data is deleted; format: yyyy-mm-ddThhmmss.
@@ -912,12 +912,29 @@ class Timeseries:
         If None, will return up to latest timestamp.
         :return:
         """
-        if time_to is None:
-            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}" \
-                .format(self._id_ds, self._id, time_from)
+        if time_to is None and time_from is not None:
+            confirm = query_yes_no("Are you sure you want to delete all data from " + time_from + " in timeseries " + self._name + " ?")
+            if confirm is True:
+                url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}" \
+                    .format(self._id_ds, self._id, time_from)
+
+        elif time_from is None and time_to is not None:
+            confirm = query_yes_no("Are you sure you want to delete all data until " + time_to + " in timeseries " + self._name + " ?")
+            if confirm is True:
+                url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?to={2}" \
+                    .format(self._id_ds, self._id, time_to)
+
+        elif time_from is None and time_to is None:
+            confirm = query_yes_no("Are you sure you want to delete all data in timeseries " + self._name + " ?")
+            if confirm is True:
+                url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values" \
+                    .format(self._id_ds, self._id)
+
         else:
-            url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}&to={3}" \
-                .format(self._id_ds, self._id, time_from, time_to)
+            confirm = query_yes_no("Are you sure you want to delete all data from " + time_from + " to " + time_to + " in timeseries " + self._name + " ?")
+            if confirm is True:
+                url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values?from={2}&to={3}" \
+                    .format(self._id_ds, self._id, time_from, time_to)
 
         response = requests.delete(url, headers=self._header)
         if response.status_code > 300:
