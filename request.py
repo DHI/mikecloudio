@@ -784,7 +784,7 @@ class Timeseries:
                                       "dataFields order.\nDefined DataFields: \n{0}".format(js["dataFields"])
                             warnings.warn(warning)
 
-                list_values.append(list_cur)
+                list_values.append(list_cur.copy())
 
         else:
             if len(columns)-1 != len(js["dataFields"]):
@@ -802,7 +802,7 @@ class Timeseries:
                             warning = "make sure order of columns correspond to 1st: main value, 2-nth: " \
                                       "dataFields order.\nDefined DataFields: \n{0}".format(js["dataFields"])
                             warnings.warn(warning)
-                list_values.append(list_cur)
+                list_values.append(list_cur.copy())
 
         dict_ = {"data": list_values
                  }
@@ -812,7 +812,7 @@ class Timeseries:
         if response.status_code < 300:
             print("added {0} values to {1}".format(len(list_values), self._id))
         elif response.status_code == 500:
-            raise ValueError("failed POST request: the amount of columns must fit the amount of dataFields "
+            raise ValueError("failed POST request: error source may be the amount of columns - must fit the amount of dataFields "
                              "defined in the timeseries attribute ")
         else:
             raise ValueError("failed POST request.")
