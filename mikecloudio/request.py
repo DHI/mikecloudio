@@ -41,6 +41,10 @@ class Connection:
         if self._id_proj == "" and self._name_proj == "":
             warnings.warn("neither project ID nor project name set. Call function set_project()")
 
+    @staticmethod
+    def read_api_key(api_key_file_path):
+        with open(api_key_file_path) as file:
+            return file.readline()
 
     def get_id(self):
         """
@@ -301,7 +305,6 @@ class Connection:
                 raise ValueError("not authorized to make this request")
             elif response.status_code >= 300:
                 raise ValueError("request failed")
-
 
     def query_proj_id(self, name):
         """
