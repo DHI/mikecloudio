@@ -10,7 +10,8 @@ from mikecloudio.timeseries import Dataset
 class ConnectMikeCloud:
     metadata_service_url = "https://core-metadata-prod.azurewebsites.net/"
 
-    def __init__(self, api_key, id_proj="", name_proj="", ds_object=""):
+    def __init__(self, api_key, id_proj="", name_proj="", ds_object="",
+                 metadata_service_url="https://core-metadata-prod.azurewebsites.net/"):
         """
         this class creates a connection to MIKE CLOUD and can be used to list get all projects, get datasets of projects
         create, update, and delete datasets
@@ -23,7 +24,7 @@ class ConnectMikeCloud:
         :param ds_object: instance of dataset if already created from another connection
         :type ds_object: mikecloudio.timeseries.Dataset
         """
-
+        self.metadata_service_url = metadata_service_url
         self._api_key = api_key
         self._header = {'dhi-open-api-key': '{0}'.format(self._api_key)}
         self._uploadURL = ""
