@@ -1,17 +1,15 @@
 import requests
 import json
 import pandas as pd
-import sys
 import warnings
 
-from mikecloudio.timeseries import Dataset
+from mikecloudio.timeseries import Dataset, query_yes_no
 
 
-class ConnectMikeCloud:
-    metadata_service_url = "https://core-metadata-prod.azurewebsites.net/"
+class Connection:
 
     def __init__(self, api_key, id_proj="", name_proj="", ds_object="",
-                 metadata_service_url="https://core-metadata-prod.azurewebsites.net/"):
+                 url="https://core-metadata-prod.azurewebsites.net/"):
         """
         this class creates a connection to MIKE CLOUD and can be used to list get all projects, get datasets of projects
         create, update, and delete datasets
@@ -24,7 +22,7 @@ class ConnectMikeCloud:
         :param ds_object: instance of dataset if already created from another connection
         :type ds_object: mikecloudio.timeseries.Dataset
         """
-        self.metadata_service_url = metadata_service_url
+        self.metadata_service_url = url
         self._api_key = api_key
         self._header = {'dhi-open-api-key': '{0}'.format(self._api_key)}
         self._uploadURL = ""
@@ -388,36 +386,3 @@ class Project:
     def __init__(self, id_project="", name_project=""):
         self._id = id_project
         self._name = name_project
-
-
-def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
-
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-
-    The "answer" return value is True for "yes" or False for "no".
-    """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
-    if default is None:
-        prompt = " [y/n] "
-    elif default == "yes":
-        prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        sys.stdout.write(question + prompt)
-        choice = input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
