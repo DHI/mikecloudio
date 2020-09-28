@@ -72,6 +72,17 @@ class Connection:
         Connection.check_response(response)
         return pd.DataFrame(response.json()["data"])
 
+    @staticmethod
+    def list_subprojects(url, api_key, project_id):
+        """
+        Request all available projects with the given api key.
+        :return: DataFrame
+        """
+        url += f"api/project/{project_id}/subprojects"
+        response = requests.get(url, headers=Connection.create_header(api_key))
+        Connection.check_response(response)
+        return pd.DataFrame(response.json()["data"])
+
     def request(self, command):
         url = self.url + command
         response = requests.get(url, headers=self._header)
@@ -93,7 +104,7 @@ class Connection:
         :return: dataframe with all datasets
         :rtype: pd.DataFrame
         """
-        if self.project_id == "":
+        if self.project_id is None:
             raise ValueError("set project ID with function setProject() first")
         if extended is True:
             url = self.url + "api/project/{0}/dataset/list".format(self.project_id)
@@ -294,12 +305,21 @@ class Connection:
     @staticmethod
     def query_project_id(project_name, url, api_key):
         projects = Connection.get_projects(url, api_key)
-        return projects['id'].loc[projects['name'] == project_name]
+        project_id = projects['id'].loc[projects['name'] == project_name]
+        if len(project_id) == 0:
+            raise Exception(f"Invalid {project_name}")
+
+        return project_id.values[0]
 
     @staticmethod
     def query_project_name(project_id, url, api_key):
         projects = Connection.get_projects(url, api_key)
-        return projects['name'].loc[projects['id'] == project_id]
+
+        project_name = projects['name'].loc[projects['id'] == project_id]
+        if len(project_name) == 0:
+            raise Exception(f"Invalid {project_id}")
+
+        return project_name.values[0]
 
     def query_ds_id(self, name):
         """

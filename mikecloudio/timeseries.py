@@ -12,7 +12,7 @@ class Dataset:
 
     def __init__(self, connection, id_dataset="", name_dataset=""):
         self.con = connection
-        self._id_proj = connection.project_id()
+        self._id_proj = connection.project_id
         self._id = id_dataset
         self._name = name_dataset
 
@@ -28,7 +28,7 @@ class Dataset:
             warnings.warn("neither dataset id nor dataset name were not defined (at least one value required).")
 
         self.ts = None
-        self._header = {'dhi-open-api-key': '{0}'.format(connection.api_key()),
+        self._header = {'dhi-open-api-key': '{0}'.format(connection._api_key),
                         'Content-Type': 'application/json',
                         'dhi-project-id': '{0}'.format(self._id_proj),
                         'dhi-dataset-id': '{0}'.format(self._id),
@@ -97,7 +97,7 @@ class Dataset:
         :return: dataframe with all timeseries in dataset
         :rtype: pd.DataFrame
         """
-        url = self.con.metadata_service_url + "api/ts/{0}/timeseries/list".format(self._id)
+        url = self.con.url + "api/ts/{0}/timeseries/list".format(self._id)
         response = requests.get(url, headers=self._header)
         if response.status_code >= 400:
             raise ValueError("request failed")
@@ -301,8 +301,8 @@ class Timeseries:
 
     def __init__(self, dataset, id_timeseries="", name_timeseries=""):
         self.ds = dataset
-        self._id_ds = self.ds.id()
-        self._id_proj = self.ds.con.project_id()
+        self._id_ds = self.ds._id
+        self._id_proj = self.ds.con.project_id
         self._id = id_timeseries
         self._name = name_timeseries
 
@@ -317,7 +317,7 @@ class Timeseries:
         if self._name == "" and self._id == "":
             warnings.warn("neither timeseries id nor timerseries name were not defined (at least one value required).")
 
-        self._header = {'dhi-open-api-key': '{0}'.format(self.ds.con.api_key()),
+        self._header = {'dhi-open-api-key': '{0}'.format(self.ds.con._api_key),
                         'Content-Type': 'application/json',
                         'dhi-project-id': '{0}'.format(self._id_proj),
                         'dhi-dataset-id': '{0}'.format(self._id_ds),
