@@ -12,7 +12,7 @@ class Dataset:
 
     def __init__(self, connection, id_dataset="", name_dataset=""):
         self.con = connection
-        self._id_proj = connection.get_id()
+        self._id_proj = connection.project_id()
         self._id = id_dataset
         self._name = name_dataset
 
@@ -28,7 +28,7 @@ class Dataset:
             warnings.warn("neither dataset id nor dataset name were not defined (at least one value required).")
 
         self.ts = None
-        self._header = {'dhi-open-api-key': '{0}'.format(connection.get_api_key()),
+        self._header = {'dhi-open-api-key': '{0}'.format(connection.api_key()),
                         'Content-Type': 'application/json',
                         'dhi-project-id': '{0}'.format(self._id_proj),
                         'dhi-dataset-id': '{0}'.format(self._id),
@@ -276,7 +276,7 @@ class Dataset:
         url = self.con.metadata_service_url + "api/project/{0}/dataset/{1}".format(self._id_proj, self._id)
         confirm = query_yes_no("Are you sure you want to delete " + self._id_proj + " ?")
         if confirm is True:
-            response = requests.delete(url, headers=self.con.get_header())
+            response = requests.delete(url, headers=self.con.header())
             if response.status_code >= 300:
                 raise ValueError("deletion request failed")
 
@@ -301,8 +301,8 @@ class Timeseries:
 
     def __init__(self, dataset, id_timeseries="", name_timeseries=""):
         self.ds = dataset
-        self._id_ds = self.ds.get_id()
-        self._id_proj = self.ds.con.get_id()
+        self._id_ds = self.ds.id()
+        self._id_proj = self.ds.con.project_id()
         self._id = id_timeseries
         self._name = name_timeseries
 
@@ -317,7 +317,7 @@ class Timeseries:
         if self._name == "" and self._id == "":
             warnings.warn("neither timeseries id nor timerseries name were not defined (at least one value required).")
 
-        self._header = {'dhi-open-api-key': '{0}'.format(self.ds.con.get_api_key()),
+        self._header = {'dhi-open-api-key': '{0}'.format(self.ds.con.api_key()),
                         'Content-Type': 'application/json',
                         'dhi-project-id': '{0}'.format(self._id_proj),
                         'dhi-dataset-id': '{0}'.format(self._id_ds),
