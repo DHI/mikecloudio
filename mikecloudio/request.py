@@ -11,8 +11,8 @@ class Connection:
     def __init__(self, api_key, id_proj="", name_proj="", ds_object="",
                  url="https://core-metadata-prod.azurewebsites.net/"):
         """
-        this class creates a connection to MIKE CLOUD and can be used to list get all projects, get datasets of projects
-        create, update, and delete datasets
+        Connect and interact with MIKE CLOUD data,
+        e.g. list all projects, get, create, update, or delete datasets
         :param api_key: api key that gives access to desired projects
         :type api_key: str
         :param id_proj: project ID
