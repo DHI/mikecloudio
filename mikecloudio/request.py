@@ -26,7 +26,7 @@ class Connection:
         """
         self.url = url
         self._api_key = api_key
-        self._header = {'dhi-open-api-key': '{0}'.format(self._api_key)}
+        self._header = self.create_header(api_key)
         self._uploadURL = ""
         self.ds = ds_object
         self._project_id = project_id
@@ -44,8 +44,12 @@ class Connection:
             warnings.warn("neither project ID nor project name set. Call function set_project()")
 
     @staticmethod
+    def create_header(api_key):
+        return {'dhi-open-api-key': api_key}
+
+    @staticmethod
     def create_from_project_id(api_key, project_id):
-        project_name = self.query_project_id(project_name)
+        project_name = query_project_name(project_id, api_key)
         return Connection(api_key, project_id, project_name)
 
     @staticmethod
@@ -65,17 +69,21 @@ class Connection:
     def header(self):
         return self._header
 
-    def list_projects(self):
+    @staticmethod
+    def list_projects(url, api_key):
         """
         Request all available projects with the given api key.
         :return: DataFrame
         """
-        url = self.url + "api/project/list"
-        response = requests.get(url, headers=self._header)
+        url += "api/project/list"
+        response = requests.get(url, headers=create_header(api_key))
+
         if response.status_code >= 300:
             raise ValueError("request failed: check api key")
+
         if response.status_code == 401:
             raise ValueError("not authorized to make this request")
+
         json_ = response.json()
         return pd.DataFrame(json_["data"])
 
@@ -303,23 +311,24 @@ class Connection:
             elif response.status_code >= 300:
                 raise ValueError("request failed")
 
-    def query_project_id(self, name):
+    def query_project_id(self, project_name, api_key):
         """
         function to query the project id with the help of function list_projects()
-        :param name: name of project
+        :param project_name: name of project
         :return: id of the project
         :rtype: str
         """
-        projects = self.get_projects()
+        projects = self.get_projects(api_key)
 
         _id = ""
         for i in range(len(projects)):
-            if projects["name"][i] == name:
+            if projects["name"][i] == project_name:
                 _id = projects["id"][i]
                 break
         return _id
 
-    def query_project_name(self, project_id):
+    @staticmethod
+    def query_project_name(project_id, api_key):
         """
         function to query the project name with the help of function list_projects()
         :param project_id: id of the project
@@ -327,12 +336,12 @@ class Connection:
         :return: project name
         :rtype: str
         """
-        projects = self.get_projects()
-
+        projects = get_projects(api_key)
         return projects['name'].loc[projects['id'] == project_id]
 
-    def get_projects(self):
-        projects = self.list_projects()
+    @staticmethod
+    def get_projects(api_key):
+        projects = list_projects(api_key)
         if projects.empty:
             raise ValueError("No projects found for this api token.")
         return projects
