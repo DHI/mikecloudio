@@ -53,6 +53,10 @@ class Connection:
     def header(self):
         return self._header
 
+    @property
+    def api_key(self):
+        return self._api_key
+
     @staticmethod
     def check_response(response):
         if response.status_code >= 300:
@@ -80,6 +84,13 @@ class Connection:
         """
         url += f"api/project/{project_id}/subprojects"
         response = requests.get(url, headers=Connection.create_header(api_key))
+        Connection.check_response(response)
+        return pd.DataFrame(response.json()["data"])
+
+    @property
+    def subprojects(self):
+        url = self.url + f"api/project/{self.project_id}/subprojects"
+        response = requests.get(url, headers=self._header)
         Connection.check_response(response)
         return pd.DataFrame(response.json()["data"])
 
