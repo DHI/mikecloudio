@@ -5,10 +5,38 @@ import pandas as pd
 from mikecloudio.timeseries import Dataset, query_yes_no
 
 
+def request(command, service_url, headers, json_key="data"):
+    url = service_url + command
+    response = requests.get(url, headers=headers)
+    validate_response(response)
+    return response.json()[json_key]
+
+
+def create_header(api_key, key='dhi-open-api-key'):
+    return {key: api_key}
+
+
+def create_command(commands, delimiter='/'):
+    return delimiter.join(commands)
+
+
+def validate_response(response):
+    if response.status_code == 401:
+        raise ValueError("Not authorized to make this request.")
+
+    if response.status_code >= 300:
+        raise ValueError("Request failed: Check api key.")
+
+
+def read_api_key_from_text_file(api_key_file_path):
+    with open(api_key_file_path) as file:
+        return file.readline()
+
+
 class Connection:
 
-    def __init__(self, api_key, project_id=None, project_name=None, dataset=None,
-                 url="https://core-metadata-prod.azurewebsites.net/"):
+    def __init__(self, api_key, project_id=None, project_name=None,
+                 service_url="https://core-metadata-prod.azurewebsites.net/"):
         """
         Connect and interact with MIKE CLOUD data,
         e.g. list all projects, get, create, update, or delete datasets.
@@ -18,121 +46,94 @@ class Connection:
         :type project_id: str
         :param project_name: name of the project
         :type project_name: str
-        :param dataset: instance of dataset if already created from another connection
-        :type dataset: mikecloudio.timeseries.Dataset
-        :param url: metadata url
-        :type url: str
+        :param service_url: metadata service url
+        :type service_url: str
         """
-        self.url = url
+        self.url = service_url
         self._api_key = api_key
-        self._header = self.create_header(api_key)
-        self._upload_url = ""
         self.project_id = project_id
         self.project_name = project_name
-        self.dataset = dataset
 
+        self._upload_url = None
+        self._projects = None
+        self._header = create_header(api_key)
+
+        self.validate_project(project_id, project_name)
+
+    def validate_project(self, project_id, project_name):
         if project_id is None and project_name is None:
             raise Exception("Please specify either project_id or project_name.")
-
         if project_id is None:
-            self.project_id = self.query_project_id(project_name, url, api_key)
-
+            self.project_id = self.get_project_id_from_name(project_name)
         if project_name is None:
-            self.project_name = self.query_project_name(project_id, url, api_key)
-
-    @staticmethod
-    def create_header(api_key):
-        return {'dhi-open-api-key': api_key}
-
-    @staticmethod
-    def read_api_key(api_key_file_path):
-        with open(api_key_file_path) as file:
-            return file.readline()
-
-    @property
-    def header(self):
-        return self._header
+            self.project_name = self.get_project_name_from_id(project_id)
 
     @property
     def api_key(self):
         return self._api_key
 
-    @staticmethod
-    def check_response(response):
-        if response.status_code >= 300:
-            raise ValueError("Request failed: check api key")
-
-        if response.status_code == 401:
-            raise ValueError("Not authorized to make this request")
-
-    @staticmethod
-    def list_projects(url, api_key):
-        """
-        Request all available projects with the given api key.
-        :return: DataFrame
-        """
-        url += "api/project/list"
-        response = requests.get(url, headers=Connection.create_header(api_key))
-        Connection.check_response(response)
-        return pd.DataFrame(response.json()["data"])
-
-    @staticmethod
-    def list_subprojects(url, api_key, project_id):
-        """
-        Request all available projects with the given api key.
-        :return: DataFrame
-        """
-        url += f"api/project/{project_id}/subprojects"
-        response = requests.get(url, headers=Connection.create_header(api_key))
-        Connection.check_response(response)
-        return pd.DataFrame(response.json()["data"])
-
     @property
-    def subprojects(self):
-        url = self.url + f"api/project/{self.project_id}/subprojects"
-        response = requests.get(url, headers=self._header)
-        Connection.check_response(response)
-        return pd.DataFrame(response.json()["data"])
+    def projects(self):
+        if self._projects is None:
+            self._projects = self.request_projects()
 
-    def request(self, command):
-        url = self.url + command
-        response = requests.get(url, headers=self._header)
-        Connection.check_response(response)
-        return response.json()["data"]
+        return self._projects
 
     @property
     def upload_url(self):
-        if not self._upload_url:
-            self._upload_url = self.request("api/transfer/upload-url")
+        if self._upload_url is None:
+            self._upload_url = self.request_upload_url()
 
         return self._upload_url
 
-    def list_ds(self, extended=False):
-        """
-        function to list all datasets with project id
-        :param extended: if set to true a different request is made with alternative response
-        :type extended: bool
-        :return: dataframe with all datasets
-        :rtype: pd.DataFrame
-        """
-        if self.project_id is None:
-            raise ValueError("set project ID with function setProject() first")
-        if extended is True:
-            url = self.url + "api/project/{0}/dataset/list".format(self.project_id)
-        else:
-            url = self.url + "api/project/{0}/dataset/list-summaries".format(self.project_id)
-        response = requests.get(url, headers=self._header)
-        json_ = response.json()
-        if response.status_code == 401:
-            raise ValueError("not authorized to make this request")
-        elif response.status_code >= 300:
-            print("json response: ", json_)
-            raise ValueError("request failed")
+    def request(self, command):
+        return request(command, self.url, self._header)
 
-        else:
-            df = pd.DataFrame(json_["data"])
+    def request_projects(self):
+        """
+        Request all available projects.
+        :return: DataFrame
+        """
+        return pd.DataFrame(self.request("api/project/list"))
 
-        return df
+    def request_subprojects(self, project_id=None):
+        """
+        Request all available subprojects.
+        :return: DataFrame
+        """
+        if project_id is None:
+            project_id = self.project_id
+
+        return pd.DataFrame(self.request(f"api/project/{project_id}/subprojects"))
+
+    def request_upload_url(self):
+        return self.request("api/transfer/upload-url")
+
+    def get_project_id_from_name(self, project_name):
+        projects = self.projects
+        project_id = projects['id'].loc[projects['name'] == project_name]
+        if len(project_id) == 0:
+            raise Exception(f"Invalid {project_name}")
+
+        return project_id.values[0]
+
+    def get_project_name_from_id(self, project_id):
+        projects = self.projects
+        project_name = projects['name'].loc[projects['id'] == project_id]
+        if len(project_name) == 0:
+            raise Exception(f"Invalid {project_id}")
+
+        return project_name.values[0]
+
+    def request_datasets(self, project_id=None, extend=False):
+        if project_id is None:
+            project_id = self.project_id
+
+        command = f"api/project/{project_id}/dataset/list"
+        if extend:
+            command += "-summaries"
+
+        return pd.DataFrame(self.request(command))
 
     def create_ds(self, name, descr, prop_ds=None, metadata_ds=None, prop_ts=None, content_type="application/json"):
         """
@@ -213,6 +214,9 @@ class Connection:
         ds = Dataset(connection=self, id_dataset=json_["id"])
         return ds
 
+    def create_dataset(self, name=None, id=None):
+        pass
+
     def get_ds(self, name="", id=""):
         """
         function to create a Dataset object according the project id / or project name
@@ -226,16 +230,16 @@ class Connection:
 
             if id == "":
                 raise ValueError("dataset of name {0} does not exist".format(name))
-            self.dataset = Dataset(connection=self, name_dataset=name)
+            dataset = Dataset(connection=self, name_dataset=name)
 
         if name != "" and id != "":
-            self.dataset = Dataset(connection=self, id_dataset=id, name_dataset=name)
+            dataset = Dataset(connection=self, id_dataset=id, name_dataset=name)
 
         else:
             if id == "":
                 raise ValueError("id of dataset was not defined or does not exist")
-            self.dataset = Dataset(connection=self, id_dataset=id)
-        return self.dataset
+            dataset = Dataset(connection=self, id_dataset=id)
+        return dataset
 
     # updates a Dataset: not tested yet
     def update_ds(self, dataset_id, name_update, descr_update, type_ds="file", temp_info=None,
@@ -299,39 +303,6 @@ class Connection:
             elif response.status_code >= 300:
                 raise ValueError("request failed")
 
-    @staticmethod
-    def get_projects(url, api_key):
-        projects = Connection.list_projects(url, api_key)
-        if projects.empty:
-            raise ValueError("No projects found for this api key.")
-        return projects
-
-    @property
-    def projects(self):
-        if not self._projects:
-            self._projects = Connection.get_projects(self.url, self._api_key)
-
-        return self._projects
-
-    @staticmethod
-    def query_project_id(project_name, url, api_key):
-        projects = Connection.get_projects(url, api_key)
-        project_id = projects['id'].loc[projects['name'] == project_name]
-        if len(project_id) == 0:
-            raise Exception(f"Invalid {project_name}")
-
-        return project_id.values[0]
-
-    @staticmethod
-    def query_project_name(project_id, url, api_key):
-        projects = Connection.get_projects(url, api_key)
-
-        project_name = projects['name'].loc[projects['id'] == project_id]
-        if len(project_name) == 0:
-            raise Exception(f"Invalid {project_id}")
-
-        return project_name.values[0]
-
     def query_ds_id(self, name):
         """
         function to query the dataset id with the help of function list_ds()
@@ -380,7 +351,3 @@ class Project:
     def __init__(self, project_id, project_name):
         self._id = project_id
         self._name = project_name
-
-    @staticmethod
-    def create_connection(self, api_key):
-        return Connection(api_key, self._id, self._name)
