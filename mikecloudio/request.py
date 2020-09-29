@@ -2,13 +2,17 @@ import json
 import requests
 import pandas as pd
 
-from mikecloudio.timeseries import Dataset, query_yes_no
+from mikecloudio.timeseries import query_yes_no
+from mikecloudio.dataset import Dataset
 
 
 def request(command, service_url, headers, json_key="data"):
     url = service_url + command
     response = requests.get(url, headers=headers)
     validate_response(response)
+    if json_key is None:
+        return response.json()
+
     return response.json()[json_key]
 
 
@@ -35,7 +39,7 @@ def read_api_key_from_text_file(api_key_file_path):
 
 class Connection:
 
-    def __init__(self, api_key, project_id=None, project_name=None,
+    def __init__(self, api_key, project_name=None, project_id=None,
                  service_url="https://core-metadata-prod.azurewebsites.net/"):
         """
         Connect and interact with MIKE CLOUD data,
@@ -157,7 +161,7 @@ class Connection:
         other options: text/plain, text/csv, text/json etc. (see api docs)
         :type content_type: str 
         :return: returns a new Dataset object
-        :rtype: mikecloudio.timeseries.Dataset
+        :rtype: mikecloudio.dataset.Dataset
         """
         if prop_ds is None:
             prop_ds = {}
@@ -217,7 +221,7 @@ class Connection:
     def create_dataset(self, name=None, id=None):
         pass
 
-    def get_ds(self, name="", id=""):
+    def get_ds(self, name="", id="", project_id=None):
         """
         function to create a Dataset object according the project id / or project name
         :param id: ID of dataset
@@ -226,7 +230,7 @@ class Connection:
         :rtype: Dataset
         """
         if name != "" and id == "":
-            id = self.query_ds_id(name)
+            id = self.query_ds_id(name, project_id)
 
             if id == "":
                 raise ValueError("dataset of name {0} does not exist".format(name))
@@ -303,14 +307,14 @@ class Connection:
             elif response.status_code >= 300:
                 raise ValueError("request failed")
 
-    def query_ds_id(self, name):
+    def query_ds_id(self, name, project_id):
         """
         function to query the dataset id with the help of function list_ds()
         :param name: name of the dataset
         :return: id of the dataset
         :rtype: str
         """
-        df = self.list_ds()
+        df = self.request_datasets(project_id)
         _id = ""
 
         if df.empty:
@@ -324,14 +328,14 @@ class Connection:
 
         return _id
 
-    def query_ds_name(self, id):
+    def query_ds_name(self, id, project_id):
         """
         function to query the dataset id with the help of function list_ds()
         :param id: dataset id
         :return: name of the dataset
         :rtype: str
         """
-        df = self.list_ds()
+        df = self.request_datasets(project_id)
         _name = ""
 
         if df.empty:
