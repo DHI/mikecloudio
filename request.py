@@ -1,10 +1,13 @@
-import requests
-import json
-import pandas as pd
 import sys
+import requests
+from datetime import datetime
+import pytz
+import json
+import warnings
+
+import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-import warnings
 
 
 class ConnectMikeCloud:
@@ -484,6 +487,11 @@ class Dataset:
             raise ValueError("request failed")
         resp_dict = response.json()["data"]
         df = pd.DataFrame(resp_dict)
+
+        # add names column
+        df["name"] = [item["name"] for item in df.item]
+        df["unit"] = [item["unit"] for item in df.item]
+
         return df
 
     def query_ts_id(self, name):
@@ -705,16 +713,31 @@ class Timeseries:
                         'dhi-service-id': 'timeseries',
                         }
 
-    def get_data(self, time_from=None, time_to=None):
+    def get_data(self, time_from=None, time_to=None, timezone=None, columns=None):
         """
         function to request data in timeseries
-        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.
-        If None, will return from first timestamp.
-        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.
-        If None, will return up to latest timestamp.
+        :param time_from: timestamp after which to request data.
+                          datetime or str (format: yyyy-mm-ddThhmmss).
+                          If None, will return from first timestamp.
+        :type time_from: str or datetime
+        :param time_to: timestamp before which to request data.
+                        datetime or str (format: yyyy-mm-ddThhmmss).
+                        If None, will return to last timestamp.
+        :type time_to: str or datetime
+        :param timezone: if specified, will return tz-aware DateTimeIndex 
+        :type timezone: pytz timezone object
+        :param columns: specify the names of the dataframes columns. 
+        :type columns: str or [str]
         :return: dataframe containing the timeseries data
         :rtype: pd.DataFrame
         """
+
+        # convert time_from / time_to to string if given as datetime
+        if time_from is not None and type(time_from)==datetime:
+            time_from = time_from.strftime(format="%Y-%m-%dT%H%M%S")
+        if time_to is not None and type(time_to)==datetime:
+            time_to = time_to.strftime(format="%Y-%m-%dT%H%M%S")
+
         url = None
         if time_from is None and time_to is None:
             url = self.ds.con.metadata_service_url + "api/ts/{0}/timeseries/{1}/values"\
@@ -739,12 +762,23 @@ class Timeseries:
         df = pd.DataFrame(json_["data"])
         js = self.get_info()
 
-        columns = {0: "timestamp", 1: js["item"]["item"]}
+        column_names = {0: "timestamp", 1: js["item"]["item"]}
 
         for i in range(2, len(df.columns)):
-            columns[i] = js["dataFields"][i-2]["name"]
+            column_names[i] = js["dataFields"][i-2]["name"]
 
-        df.rename(columns=columns, inplace=True)
+        df.rename(columns=column_names, inplace=True)
+
+        if timezone is not None:
+            # make datetime index in given time zone
+            df.set_index("timestamp", inplace=True)
+            df.index = pd.to_datetime(df.index)
+            df = df.tz_localize(timezone)
+
+        if columns is not None:
+            if type(columns)==str:
+                columns = [columns]
+            df.columns=columns
 
         return df
 
