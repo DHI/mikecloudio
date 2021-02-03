@@ -1,3 +1,5 @@
+import pandas as pd
+
 from mikecloudio.request import create_header, request
 
 
@@ -12,3 +14,7 @@ def get_multidimensional_dataset(connection, path, data_type='md'):
 
     dataset = request(command, connection.url, header, json_key=None)
     return dataset
+
+
+def get_datetimes_from_dataset(dataset):
+    return pd.to_datetime([time['v'] for time in dataset['temporalDomain']['times']])
