@@ -129,6 +129,42 @@ class Connection:
 
         return project_name.values[0]
 
+    def get_subproject_id_from_path(self, path, delimiter='/', project_id=None):
+        subprojects = self.request_subprojects(project_id)
+        subproject_names = path.split(delimiter)
+
+        if len(subproject_names) == 1:
+            subproject_names.insert(0, self.project_name)
+
+        subproject_id = subprojects['id'].loc[subprojects['name'] == subproject_names[1]]
+        if len(subproject_id) == 0:
+            raise Exception(f"Invalid name {subproject_names[1]}")
+
+        subproject_id = subproject_id.values[0]
+
+        if len(subproject_names) > 2:
+            remaining_path = delimiter.join(subproject_names[1:])
+            return self.get_subproject_id_from_path(remaining_path, delimiter, subproject_id)
+        else:
+            return subproject_id
+
+    def get_dataset_id_from_path(self, path, delimiter='/', return_subproject_id=False):
+        subprojects_and_dataset = path.split(delimiter)
+        path = delimiter.join(subprojects_and_dataset[:-1])
+        dataset_name = subprojects_and_dataset[-1]
+        subproject_id = self.get_subproject_id_from_path(path)
+        datasets = self.request_datasets(subproject_id)
+        dataset_id = datasets[datasets.name == dataset_name].id
+
+        if len(dataset_id) == 0:
+            raise Exception(f"Invalid name {dataset_name}")
+        dataset_id = dataset_id.values[0]
+
+        if return_subproject_id:
+            return dataset_id, subproject_id
+
+        return dataset_id
+
     def request_datasets(self, project_id=None, extend=False):
         if project_id is None:
             project_id = self.project_id
