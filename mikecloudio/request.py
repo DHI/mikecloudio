@@ -16,8 +16,15 @@ def request(command, service_url, headers, json_key="data"):
     return response.json()[json_key]
 
 
-def create_header(api_key, key='dhi-open-api-key'):
-    return {key: api_key}
+def create_header(api_key, **kwargs):
+    if len(kwargs) == 0:
+        return {'dhi-open-api-key': api_key}
+    else:
+        header = create_header(api_key)
+        for key in list(kwargs.keys()):
+            header_key = key.replace("_", "-")
+            header[header_key] = kwargs.pop(key)
+        return header
 
 
 def create_command(commands, delimiter='/'):
