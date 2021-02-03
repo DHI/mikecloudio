@@ -17,6 +17,12 @@ def request(command, service_url, headers, json_key="data"):
 
 
 def create_header(api_key, **kwargs):
+    """ Create API header.
+
+    :param api_key:
+    :param kwargs: additional header arguments, e.g. dhi_project_id="acbd-1234". Underscores will be replaced by dashes.
+    :return:
+    """
     if len(kwargs) == 0:
         return {'dhi-open-api-key': api_key}
     else:
