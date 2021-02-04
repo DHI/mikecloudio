@@ -20,6 +20,8 @@ def get_multidimensional_dataset(connection, path, data_type='md'):
 def get_datetimes_from_dataset(dataset):
     return pd.to_datetime([time['v'] for time in dataset['temporalDomain']['times']])
 
+def get_item_info_from_dataset(dataset):
+    return pd.DataFrame(dataset['items']).set_index('i')
 
 def request_multidimensional_data(connection, path, query, data_type='md'):
     """
@@ -44,10 +46,20 @@ def request_multidimensional_data(connection, path, query, data_type='md'):
     return response.json()
 
 
-def create_multidimensional_data_query(item_indices=None, time_range=None,
+def create_multidimensional_data_query(item_indices=None, time_range=None, srid=4326,
                                        include_geometries=False,
                                        include_values=True):
+    """
 
+    Geometries are specified as WKT: https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+
+    :param item_indices:
+    :param time_range:
+    :param srid:
+    :param include_geometries:
+    :param include_values:
+    :return:
+    """
     item_indices = [0] if item_indices is None else item_indices
     time_range = [0, 10] if time_range is None else time_range
 
@@ -57,12 +69,12 @@ def create_multidimensional_data_query(item_indices=None, time_range=None,
         },
         "spatialFilter": {
             "geometry": "POINT (100.0983376133463 14.26718894186121)",
-            "srid": 4326
+            "srid": srid
         },
         "temporalFilter": {
             "type": "TemporalIndexFilter",
-            "from": time_range.min(),
-            "to": time_range.max()
+            "from": min(time_range),
+            "to": max(time_range)
         },
         "verticalFilter": None,
         "includeGeometries": include_geometries,
