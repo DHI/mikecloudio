@@ -76,7 +76,7 @@ def create_multidimensional_data_query(item_indices=None, time_range=None, srid=
             "itemIndices": item_indices
         },
         "spatialFilter": {
-            "geometry": geometry_wkt_str,  # "POINT (100.0983376133463 14.26718894186121)",
+            "geometry": geometry_wkt_str,
             "srid": srid
         },
         "temporalFilter": {
