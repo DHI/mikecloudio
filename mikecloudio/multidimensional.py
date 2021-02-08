@@ -20,8 +20,10 @@ def get_multidimensional_dataset(connection, path, data_type='md'):
 def get_datetimes_from_dataset(dataset):
     return pd.to_datetime([time['v'] for time in dataset['temporalDomain']['times']])
 
+
 def get_item_info_from_dataset(dataset):
     return pd.DataFrame(dataset['items']).set_index('i')
+
 
 def request_multidimensional_data(connection, path, query, data_type='md'):
     """
@@ -46,15 +48,21 @@ def request_multidimensional_data(connection, path, query, data_type='md'):
     return response.json()
 
 
+def create_test_point():
+    from shapely.geometry import Point
+    return Point(100.0983376133463, 14.26718894186121)
+
+
 def create_multidimensional_data_query(item_indices=None, time_range=None, srid=4326,
+                                       geometry_wkt_str=None,
                                        include_geometries=False,
                                        include_values=True):
     """
 
-    Geometries are specified as WKT: https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
-
     :param item_indices:
     :param time_range:
+    :param geometry_wkt_str: geometry WKT string
+        Geometries are specified as WKT: https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
     :param srid:
     :param include_geometries:
     :param include_values:
@@ -68,7 +76,7 @@ def create_multidimensional_data_query(item_indices=None, time_range=None, srid=
             "itemIndices": item_indices
         },
         "spatialFilter": {
-            "geometry": "POINT (100.0983376133463 14.26718894186121)",
+            "geometry": geometry_wkt_str,  # "POINT (100.0983376133463 14.26718894186121)",
             "srid": srid
         },
         "temporalFilter": {
