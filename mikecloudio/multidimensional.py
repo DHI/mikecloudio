@@ -48,6 +48,14 @@ def request_multidimensional_data(connection, path, query, data_type='md'):
     return response.json()
 
 
+def create_test_polygon():
+    from shapely.geometry import Polygon, Point
+    points = [Point(100.0983376133463, 14.26718894186121),
+              Point(100.0983376133463, 14),
+              Point(100, 14.26718894186121),
+              Point(100.0983376133463, 14.26718894186121)]
+    return Polygon(points)
+
 def create_test_point():
     from shapely.geometry import Point
     return Point(100.0983376133463, 14.26718894186121)
