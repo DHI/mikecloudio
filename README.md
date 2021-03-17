@@ -6,9 +6,9 @@ A Python wrapper to access the MIKE Cloud Live REST API
 
 Maximilian Winderl
   
-Email: de99717@dhigroup.com
+Email: mwin@dhigroup.com
 
 
 For general information on Mike Cloud Live API, see:
 
-https://core-apispec-dev.azurewebsites.net/
+https://develop.mike-cloud-dev.com/
