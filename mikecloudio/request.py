@@ -44,6 +44,7 @@ class Connection:
         """
         Connect and interact with MIKE CLOUD data,
         e.g. list all projects, get, create, update, or delete datasets.
+
         :param api_key: api key that gives access to desired projects
         :type api_key: str
         :param project_id: project ID
@@ -96,6 +97,7 @@ class Connection:
     def request_projects(self):
         """
         Request all available projects.
+
         :return: DataFrame
         """
         return pd.DataFrame(self.request("api/project/list"))
@@ -103,6 +105,7 @@ class Connection:
     def request_subprojects(self, project_id=None):
         """
         Request all available subprojects.
+
         :return: DataFrame
         """
         if project_id is None:
@@ -142,6 +145,7 @@ class Connection:
     def create_ds(self, name, descr, prop_ds=None, metadata_ds=None, prop_ts=None, content_type="application/json"):
         """
         function to create a new dataset
+
         :rtype: object
         :param name: name of new dataset
         :type name: str
@@ -151,14 +155,13 @@ class Connection:
         :type prop_ds: dict
         :param metadata_ds: metadata of the dataset can be added additionally as dict
         :type metadata_ds: dict
-        :param prop_ts: defines the properties for the timeseries:
-        <name> and <dataType> must be included in the dictionaries of the prop_ts list.
-        Every property defined here must be defined in create_ts() properties too.
-        Example: [{"name": "a1", "dataType": "Text"},..]
-        Types allowed: "DateTime", "Long", "Double", "Boolean", "Text"
+        :param prop_ts: defines the properties for the timeseries: <name> and <dataType> must be included in the dictionaries of the prop_ts list. \\
+            Every property defined here must be defined in create_ts() properties too. \\
+            Example: [{"name": "a1", "dataType": "Text"},..] \\
+            Types allowed: "DateTime", "Long", "Double", "Boolean", "Text" \\
         :type prop_ts: list
-        :param content_type: default set to application/json;
-        other options: text/plain, text/csv, text/json etc. (see api docs)
+        :param content_type: default set to application/json; \\
+            other options: text/plain, text/csv, text/json etc. (see api docs)
         :type content_type: str 
         :return: returns a new Dataset object
         :rtype: mikecloudio.dataset.Dataset
@@ -224,6 +227,7 @@ class Connection:
     def get_ds(self, name="", id="", project_id=None):
         """
         function to create a Dataset object according the project id / or project name
+
         :param id: ID of dataset
         :param name: name of dataset
         :return: Dataset instance
@@ -289,6 +293,7 @@ class Connection:
     def del_ds(self, name="", id=""):
         """
         function to request deletion of a dataset
+
         :param id: id of dataset
         :type id: str
         :param name: name of dataset
@@ -310,6 +315,7 @@ class Connection:
     def query_ds_id(self, name, project_id):
         """
         function to query the dataset id with the help of function list_ds()
+
         :param name: name of the dataset
         :return: id of the dataset
         :rtype: str
@@ -331,6 +337,7 @@ class Connection:
     def query_ds_name(self, id, project_id):
         """
         function to query the dataset id with the help of function list_ds()
+
         :param id: dataset id
         :return: name of the dataset
         :rtype: str

@@ -58,6 +58,7 @@ class Dataset:
     def get_id(self):
         """
         Getter function for dataset ID
+
         :return: ID of instance
         """
         return self._id
@@ -65,6 +66,7 @@ class Dataset:
     def get_info(self, extended=False):
         """
         function to get dataset details
+
         :param extended: set to True if extra information needed.
         :type extended: bool
         :return: dictionary with details
@@ -85,6 +87,7 @@ class Dataset:
     def set_ds_id(self, dataset_id):
         """
         function to set dataset id if not defined in constructor
+
         :param dataset_id: id of dataset
         :type dataset_id: str
         """
@@ -93,6 +96,7 @@ class Dataset:
     def list_ts(self):
         """
         request all timeseries related to dataset it
+
         :return: dataframe with all timeseries in dataset
         :rtype: pd.DataFrame
         """
@@ -107,6 +111,7 @@ class Dataset:
     def query_ts_id(self, name):
         """
         function to query timeseries ID by its name
+
         :param name: timeseries name
         :return: timeseries ID
         :rtype: str
@@ -134,6 +139,7 @@ class Dataset:
     def query_ts_name(self, id):
         """
         function to query timeseries name by its ID
+
         :param id: timeseries ID
         :return: timeseries name
         :rtype: str
@@ -154,9 +160,11 @@ class Dataset:
     def check_ts_exist(self, name):
         """
         function to check if timeseries exists in dataset
+
         :param name: name of timeseries
         :return: state true if exists otherwise false
         :rtype: bool
+
         """
         df = self.list_ts()
         state = False
@@ -174,6 +182,7 @@ class Dataset:
     def get_ts(self, name="", id=""):
         """
         function to get_ts by name or id and return a Timeseries object
+
         :param name: timeseries name
         :type name: str
         :param id: timeseries id
@@ -194,6 +203,7 @@ class Dataset:
                   properties=None):
         """
         function to create a timeseries
+
         :param name: desired name of timeseries
         :type name: str
         :param unit: unit value - must be part of DHI convention
@@ -201,9 +211,9 @@ class Dataset:
         :param item: parameter value - must be part of DHI convention
         :type item: str
         :param data_type: accepted data types: Text, Date, Int32, Int64, Single, Double, Int16
-        :param data_fields: define how many columns the timeseries comprises and their names and dataTypes.
-        List of dictionaries, example: [{"name": "pressure", "dataType": "Double"},..,{}]
-        possible data field dataTypes: DateTime, Single, Double, Flag, Text
+        :param data_fields: define how many columns the timeseries comprises and their names and dataTypes. \\
+            List of dictionaries, example: [{"name": "pressure", "dataType": "Double"},..,{}]\\
+            possible data field dataTypes: DateTime, Single, Double, Flag, Text
         :type data_fields: list
         :param properties: assign additional properties for the timeseries as defined in the dataset timeseries schema
         :return: returns an instance of Timeseries corresponding to the created one
@@ -282,6 +292,7 @@ class Dataset:
     def del_ts(self, name="", id=""):
         """
         function to delete a timeseries based on name or id
+
         :param name: name of timeseries
         :param id: ID of timeseries
         """

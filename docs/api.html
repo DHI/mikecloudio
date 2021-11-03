@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MikeCloudIo API Documentation &mdash; mikecloudio 1.000 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="mikecloudio" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> mikecloudio
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MikeCloudIo API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-api">Dataset API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#request-api">Request API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timeseries-api">Timeseries API</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mikecloudio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>MikeCloudIo API Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="mikecloudio-api-documentation">
+<h1>MikeCloudIo API Documentation<a class="headerlink" href="#mikecloudio-api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dataset-api">
+<h2>Dataset API<a class="headerlink" href="#dataset-api" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="mikecloudio.Dataset">
+<em class="property">class </em><code class="sig-prename descclassname">mikecloudio.</code><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">connection</span></em>, <em class="sig-param"><span class="n">id_dataset</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">name_dataset</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="mikecloudio.Dataset.check_ts_exist">
+<code class="sig-name descname">check_ts_exist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.check_ts_exist" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to check if timeseries exists in dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – name of timeseries</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>state true if exists otherwise false</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.create_ts">
+<code class="sig-name descname">create_ts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">unit</span><span class="o">=</span><span class="default_value">'eumUmeter'</span></em>, <em class="sig-param"><span class="n">item</span><span class="o">=</span><span class="default_value">'eumIWaterLevel'</span></em>, <em class="sig-param"><span class="n">data_type</span><span class="o">=</span><span class="default_value">'Single'</span></em>, <em class="sig-param"><span class="n">data_fields</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.create_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to create a timeseries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – desired name of timeseries</p></li>
+<li><p><strong>unit</strong> (<em>str</em>) – unit value - must be part of DHI convention</p></li>
+<li><p><strong>item</strong> (<em>str</em>) – parameter value - must be part of DHI convention</p></li>
+<li><p><strong>data_type</strong> – accepted data types: Text, Date, Int32, Int64, Single, Double, Int16</p></li>
+<li><p><strong>data_fields</strong> (<em>list</em>) – define how many columns the timeseries comprises and their names and dataTypes. List of dictionaries, example: [{“name”: “pressure”, “dataType”: “Double”},..,{}]possible data field dataTypes: DateTime, Single, Double, Flag, Text</p></li>
+<li><p><strong>properties</strong> – assign additional properties for the timeseries as defined in the dataset timeseries schema</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>returns an instance of Timeseries corresponding to the created one</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mikecloudio.Timeseries" title="mikecloudio.Timeseries">Timeseries</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.del_ds">
+<code class="sig-name descname">del_ds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.del_ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to delete dataset of the current instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.del_ts">
+<code class="sig-name descname">del_ts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">id</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.del_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to delete a timeseries based on name or id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – name of timeseries</p></li>
+<li><p><strong>id</strong> – ID of timeseries</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.get_id">
+<code class="sig-name descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.get_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter function for dataset ID</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ID of instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.get_info">
+<code class="sig-name descname">get_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">extended</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.get_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to get dataset details</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>extended</strong> (<em>bool</em>) – set to True if extra information needed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary with details</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.get_ts">
+<code class="sig-name descname">get_ts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">id</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.get_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to get_ts by name or id and return a Timeseries object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – timeseries name</p></li>
+<li><p><strong>id</strong> (<em>str</em>) – timeseries id</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Timeseries object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mikecloudio.Timeseries" title="mikecloudio.Timeseries">Timeseries</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.list_ts">
+<code class="sig-name descname">list_ts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.list_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>request all timeseries related to dataset it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dataframe with all timeseries in dataset</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.query_ts_id">
+<code class="sig-name descname">query_ts_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.query_ts_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to query timeseries ID by its name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – timeseries name</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>timeseries ID</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.query_ts_name">
+<code class="sig-name descname">query_ts_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.query_ts_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to query timeseries name by its ID</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – timeseries ID</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>timeseries name</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Dataset.set_ds_id">
+<code class="sig-name descname">set_ds_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Dataset.set_ds_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to set dataset id if not defined in constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_id</strong> (<em>str</em>) – id of dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="request-api">
+<h2>Request API<a class="headerlink" href="#request-api" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="mikecloudio.Connection">
+<em class="property">class </em><code class="sig-prename descclassname">mikecloudio.</code><code class="sig-name descname">Connection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">api_key</span></em>, <em class="sig-param"><span class="n">project_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">service_url</span><span class="o">=</span><span class="default_value">'https://core-metadata-prod.azurewebsites.net/'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="mikecloudio.Connection.create_ds">
+<code class="sig-name descname">create_ds</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">descr</span></em>, <em class="sig-param"><span class="n">prop_ds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">metadata_ds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prop_ts</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">content_type</span><span class="o">=</span><span class="default_value">'application/json'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.create_ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to create a new dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – name of new dataset</p></li>
+<li><p><strong>descr</strong> (<em>str</em>) – write something that describes the dataset</p></li>
+<li><p><strong>prop_ds</strong> (<em>dict</em>) – properties of the dataset can be added additionally as dict</p></li>
+<li><p><strong>metadata_ds</strong> (<em>dict</em>) – metadata of the dataset can be added additionally as dict</p></li>
+<li><p><strong>prop_ts</strong> (<em>list</em>) – defines the properties for the timeseries: &lt;name&gt; and &lt;dataType&gt; must be included in the dictionaries of the prop_ts list. Every property defined here must be defined in create_ts() properties too. Example: [{“name”: “a1”, “dataType”: “Text”},..] Types allowed: “DateTime”, “Long”, “Double”, “Boolean”, “Text” </p></li>
+<li><p><strong>content_type</strong> (<em>str</em>) – default set to application/json; other options: text/plain, text/csv, text/json etc. (see api docs)</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>returns a new Dataset object</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>mikecloudio.dataset.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Connection.del_ds">
+<code class="sig-name descname">del_ds</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">id</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.del_ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to request deletion of a dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>str</em>) – id of dataset</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – name of dataset</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Connection.get_ds">
+<code class="sig-name descname">get_ds</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">id</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">project_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.get_ds" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to create a Dataset object according the project id / or project name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – ID of dataset</p></li>
+<li><p><strong>name</strong> – name of dataset</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dataset instance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mikecloudio.Dataset" title="mikecloudio.Dataset">Dataset</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Connection.query_ds_id">
+<code class="sig-name descname">query_ds_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">project_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.query_ds_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to query the dataset id with the help of function list_ds()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – name of the dataset</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>id of the dataset</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Connection.query_ds_name">
+<code class="sig-name descname">query_ds_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id</span></em>, <em class="sig-param"><span class="n">project_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.query_ds_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to query the dataset id with the help of function list_ds()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> – dataset id</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>name of the dataset</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Connection.request_projects">
+<code class="sig-name descname">request_projects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.request_projects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request all available projects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Connection.request_subprojects">
+<code class="sig-name descname">request_subprojects</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Connection.request_subprojects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request all available subprojects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="mikecloudio.Project">
+<em class="property">class </em><code class="sig-prename descclassname">mikecloudio.</code><code class="sig-name descname">Project</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">project_id</span></em>, <em class="sig-param"><span class="n">project_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Project" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="timeseries-api">
+<h2>Timeseries API<a class="headerlink" href="#timeseries-api" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="mikecloudio.Timeseries">
+<em class="property">class </em><code class="sig-prename descclassname">mikecloudio.</code><code class="sig-name descname">Timeseries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataset</span></em>, <em class="sig-param"><span class="n">id_timeseries</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">name_timeseries</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="mikecloudio.Timeseries.add_csv">
+<code class="sig-name descname">add_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">columns</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.add_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>add data in form of a csv-file. Format required:
+1st column: timestamp, 2nd: main value, 3rd - nth: additional values according to defined dataFields
+in timeseries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – path of csv-file</p></li>
+<li><p><strong>columns</strong> (<em>list</em>) – optional to define which columns to be added. Format:[&lt;main value&gt;, &lt;additional values according to dataFields&gt;, &lt;additional values according to dataFields&gt;, …]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Timeseries.add_data">
+<code class="sig-name descname">add_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dataframe</span></em>, <em class="sig-param"><span class="n">columns</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.add_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>add data to Mike Cloud API in form of a dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pandas.core.frame.DataFrame</em>) – dataframe containing data with timestamp as index; order of columnsmust correspond to 1st: main value, 2-nth: dataFields order</p></li>
+<li><p><strong>columns</strong> (<em>list</em>) – list of names of additional columns within the dataframe;
+list values must correspond to 1st: main value, 2-nth: dataFields order</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Timeseries.del_data">
+<code class="sig-name descname">del_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_to</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.del_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to delete data from timeseries; if no ‘to’ time defined will delete all values to latest timestep</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_from</strong> – specify from what timestamp data is deleted; format: yyyy-mm-ddThhmmss.If None, will delete all data from first timestamp.</p></li>
+<li><p><strong>time_to</strong> – specify to what timestamp data is deleted; format: yyyy-mm-ddThhmmss.If None, will return up to latest timestamp.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Timeseries.del_ts">
+<code class="sig-name descname">del_ts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.del_ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to delete corresponding timeseries of the timeseries instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Timeseries.get_data">
+<code class="sig-name descname">get_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_to</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to request data in timeseries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_from</strong> – specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss. If None, will return from first timestamp.</p></li>
+<li><p><strong>time_to</strong> – specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss. If None, will return up to latest timestamp.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe containing the timeseries data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Timeseries.get_info">
+<code class="sig-name descname">get_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.get_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>get detailled information about timeseries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a dictionary with the information</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="mikecloudio.Timeseries.plot">
+<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_from</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_to</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">columns</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#mikecloudio.Timeseries.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to plot data of the timeseries object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_from</strong> – specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.If None, will return from first timestamp.</p></li>
+<li><p><strong>time_to</strong> – specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.If None, will return up to latest timestamp.</p></li>
+<li><p><strong>columns</strong> – a list of the column names to be plotted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>figure to adapt visualization</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="mikecloudio" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2018-2021 DHI - Maximilian Winderl.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

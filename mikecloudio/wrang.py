@@ -35,6 +35,7 @@ def splitDF(df,distinctFeature):
 def set_temp_info(start_time, end_time, interval="string", resolution="string"):
     """
     function to create a dictionary with typicial values of temporal information for the dataset
+
     :param start_time:
     :param end_time:
     :param interval:
@@ -56,6 +57,7 @@ def set_temp_info(start_time, end_time, interval="string", resolution="string"):
 def set_spat_info(location=None, primary_spatial_reference="string", resolution="string", srid=0):
     """
     function to create a dictionary with typicial values of spatial information for the dataset
+    
     :param location:
     :param primary_spatial_reference:
     :param resolution:

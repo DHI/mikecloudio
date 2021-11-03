@@ -38,10 +38,9 @@ class Timeseries:
     def get_data(self, time_from=None, time_to=None):
         """
         function to request data in timeseries
-        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.
-        If None, will return from first timestamp.
-        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.
-        If None, will return up to latest timestamp.
+
+        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss. If None, will return from first timestamp.
+        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss. If None, will return up to latest timestamp.
         :return: dataframe containing the timeseries data
         :rtype: pd.DataFrame
         """
@@ -81,11 +80,12 @@ class Timeseries:
     def add_data(self, dataframe, columns=None):
         """
         add data to Mike Cloud API in form of a dataframe
-        :param dataframe: dataframe containing data with timestamp as index; order of columns
-        must correspond to 1st: main value, 2-nth: dataFields order
-        :type dataframe: pandas.core.frame.DataFrame
+
+        :param dataframe: dataframe containing data with timestamp as index; order of columns\\
+            must correspond to 1st: main value, 2-nth: dataFields order
+        :type dataframe: pandas.core.frame.DataFrame\\
         :param columns: list of names of additional columns within the dataframe;
-        list values must correspond to 1st: main value, 2-nth: dataFields order
+            list values must correspond to 1st: main value, 2-nth: dataFields order
         :type columns: list
         """
         url = self.ds.con.metadata_service_url + "api/upload/{0}/timeseries/{1}/json".format(self._id_ds,
@@ -152,10 +152,11 @@ class Timeseries:
         add data in form of a csv-file. Format required:
         1st column: timestamp, 2nd: main value, 3rd - nth: additional values according to defined dataFields
         in timeseries
+
         :param path: path of csv-file
         :type path: str
-        :param columns: optional to define which columns to be added. Format:
-        [<main value>, <additional values according to dataFields>, <additional values according to dataFields>, ...]
+        :param columns: optional to define which columns to be added. Format:\\
+            [<main value>, <additional values according to dataFields>, <additional values according to dataFields>, ...]
         :type columns: list
         """
         path = Path(path)
@@ -166,6 +167,7 @@ class Timeseries:
     def get_info(self):
         """
         get detailled information about timeseries
+
         :return: a dictionary with the information
         :rtype: dict
         """
@@ -180,12 +182,12 @@ class Timeseries:
     def plot(self, time_from=None, time_to=None, columns=None):
         """
         function to plot data of the timeseries object
-        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.
-        If None, will return from first timestamp.
-        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.
-        If None, will return up to latest timestamp.
+
+        :param time_from: specify from what timestamp data is requested; format: yyyy-mm-ddThhmmss.\\
+            If None, will return from first timestamp.
+        :param time_to: specify to what timestamp data is requested; format: yyyy-mm-ddThhmmss.\\
+            If None, will return up to latest timestamp.
         :param columns: a list of the column names to be plotted
-        :type list
         :return: figure to adapt visualization
         :rtype: matplotlib.figure.Figure
         """
@@ -236,10 +238,11 @@ class Timeseries:
     def del_data(self, time_from=None, time_to=None):
         """
         function to delete data from timeseries; if no 'to' time defined will delete all values to latest timestep
-        :param time_from: specify from what timestamp data is deleted; format: yyyy-mm-ddThhmmss.
-        If None, will delete all data from first timestamp.
-        :param time_to: specify to what timestamp data is deleted; format: yyyy-mm-ddThhmmss.
-        If None, will return up to latest timestamp.
+
+        :param time_from: specify from what timestamp data is deleted; format: yyyy-mm-ddThhmmss.\\
+            If None, will delete all data from first timestamp.
+        :param time_to: specify to what timestamp data is deleted; format: yyyy-mm-ddThhmmss.\\
+            If None, will return up to latest timestamp.
         :return:
         """
         if time_to is None and time_from is not None:
