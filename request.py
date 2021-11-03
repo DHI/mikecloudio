@@ -42,8 +42,8 @@ class ConnectMikeCloud:
             self._name_proj = self.query_proj_name(id_proj)
             self._id_proj = id_proj
 
-        #if self._id_proj == "" and self._name_proj == "":
-        #    warnings.warn("neither project ID nor project name set. Call function set_project()")
+        if self._id_proj == "" and self._name_proj == "":
+            warnings.warn("neither project ID nor project name set. Call function set_project()")
 
 
     def get_id(self):
