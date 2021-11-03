@@ -42,8 +42,8 @@ class ConnectMikeCloud:
             self._name_proj = self.query_proj_name(id_proj)
             self._id_proj = id_proj
 
-        if self._id_proj == "" and self._name_proj == "":
-            warnings.warn("neither project ID nor project name set. Call function set_project()")
+        #if self._id_proj == "" and self._name_proj == "":
+        #    warnings.warn("neither project ID nor project name set. Call function set_project()")
 
 
     def get_id(self):
@@ -782,7 +782,7 @@ class Timeseries:
 
         return df
 
-    def add_data(self, dataframe, columns=None):
+    def add_data(self, dataframe, columns=None, verbose=True):
         """
         add data to Mike Cloud API in form of a dataframe
         :param dataframe: dataframe containing data with timestamp as index; order of columns
@@ -843,7 +843,7 @@ class Timeseries:
 
         body = json.dumps(dict_)
         response = requests.post(url, headers=self._header, data=body)
-        if response.status_code < 300:
+        if response.status_code < 300 and verbose:
             print("added {0} values to {1}".format(len(list_values), self._id))
         elif response.status_code == 500:
             raise ValueError("failed POST request: error source may be the amount of columns - must fit the amount of dataFields "
